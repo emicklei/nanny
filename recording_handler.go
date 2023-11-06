@@ -24,6 +24,10 @@ func NewRecordingHandler(h http.Handler, r *recorder) *RecordingHandler {
 	}
 }
 
-func RecorderFromContext(ctx context.Context) *recorder {
-	return ctx.Value(recorder_key).(*recorder)
+func RecorderFromContext(ctx context.Context) CanRecord {
+	v := ctx.Value(recorder_key)
+	if v, ok := v.(CanRecord); ok {
+		return v
+	}
+	return NoRecorder{}
 }

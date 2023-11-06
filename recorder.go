@@ -35,6 +35,11 @@ func WithMaxEvents(maxEvents int) Option {
 type RetentionStrategy interface {
 }
 
+type CanRecord interface {
+	Record(name string, value any) CanRecord
+	Group(name string) CanRecord
+}
+
 func NewRecorder(opts ...Option) *recorder {
 	return &recorder{
 		mutex:     sync.RWMutex{},
@@ -43,15 +48,16 @@ func NewRecorder(opts ...Option) *recorder {
 	}
 }
 
-func (r *recorder) Group(name string) *EventGroup {
+func (r *recorder) Group(name string) CanRecord {
 	return &EventGroup{
-		recorder: r,
-		Group:    name,
+		recorder:  r,
+		groupName: name,
 	}
 }
 
-func (r *recorder) Record(name string, value any) {
+func (r *recorder) Record(name string, value any) CanRecord {
 	r.record("", name, value)
+	return r
 }
 
 func (r *recorder) record(group, name string, value any) {
