@@ -5,20 +5,20 @@ import (
 	"net/http"
 )
 
-type RecordingHandler struct {
+type RecordingHTTPHandler struct {
 	recorder *recorder
 	handler  http.Handler
 }
 
 var recorder_key = struct{}{}
 
-func (h *RecordingHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+func (h *RecordingHTTPHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	ctx := context.WithValue(r.Context(), recorder_key, h.recorder)
 	h.handler.ServeHTTP(w, r.WithContext(ctx))
 }
 
-func NewRecordingHandler(h http.Handler, r *recorder) *RecordingHandler {
-	return &RecordingHandler{
+func NewRecordingHTTPHandler(h http.Handler, r *recorder) *RecordingHTTPHandler {
+	return &RecordingHTTPHandler{
 		recorder: r,
 		handler:  h,
 	}

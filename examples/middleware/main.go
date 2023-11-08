@@ -14,10 +14,10 @@ func main() {
 	rec := nanny.NewRecorder(nanny.WithMaxEvents(100))
 
 	// record events
-	http.Handle("/do", nanny.NewRecordingHandler(http.HandlerFunc(do), rec))
+	http.Handle("/do", nanny.NewRecordingHTTPHandler(http.HandlerFunc(do), rec))
 
 	// serve captured events
-	http.Handle("/log", nanny.NewBrowser(rec))
+	http.Handle("/nanny", nanny.NewBrowser(rec))
 
 	// serve
 	http.ListenAndServe(":8080", http.DefaultServeMux)

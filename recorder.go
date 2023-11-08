@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"log/slog"
+	"os"
 	"sort"
 	"sync"
 	"time"
@@ -98,9 +99,10 @@ func (r *recorder) Log() {
 	sort.Slice(list, func(i, j int) bool {
 		return list[i].Time.Before(list[j].Time)
 	})
+	th := slog.NewTextHandler(os.Stdout, nil)
 	for _, ev := range list {
-		lr := slog.NewRecord(ev.Time, slog.LevelInfo, ev.Name, 0)
-		lr.AddAttrs(slog.Any("value", ev.Value))
-		slog.Default().Handler().Handle(context.Background(), lr)
+		lr := slog.NewRecord(ev.Time, slog.LevelInfo, ev.Group, 0)
+		lr.AddAttrs(slog.Any(ev.Name, ev.Value))
+		th.Handle(context.Background(), lr)
 	}
 }
