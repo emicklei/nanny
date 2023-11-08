@@ -11,6 +11,8 @@ import (
 	"time"
 )
 
+var LevelTrace = slog.Level(-8)
+
 type Event struct {
 	Time      time.Time  `json:"t" `
 	Level     slog.Level `json:"l" `
@@ -93,6 +95,7 @@ func (r *recorder) record(level slog.Level, group, name string, value any) {
 	r.events = append(r.events, ev)
 }
 
+// Log outputs all events using the TextHandler
 func (r *recorder) Log() {
 	r.mutex.RLock()
 	defer r.mutex.RUnlock()

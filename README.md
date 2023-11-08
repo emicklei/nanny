@@ -1,6 +1,6 @@
 # nanny
 
-Watching log events with attribute values to serve a window of historical with JSON data.
+Recording log events with all attribute values to for remote inspection through HTTP.
 
 
 ## use as slog Handler
@@ -18,7 +18,7 @@ Watching log events with attribute values to serve a window of historical with J
 	slog.Info("test", "a", "b")
 ```
 
-## uss as HTTP Middleware
+## use in HTTP Middleware
 
 ```go
 	rec := nanny.NewRecorder(nanny.WithMaxEvents(100))
@@ -32,7 +32,7 @@ Then in your http handle func:
 func doPath(w http.ResponseWriter, r *http.Request) {
 
 	rec := nanny.RecorderFromContext(r.Context())
-	rec.Group("some operation").
+	rec.Group("doPath").
 		Record(slog.LevelDebug, "test", "hello").
 		Record(slog.LevelInfo, "ev", Bike{Brand: "Trek", Model: "Emonda", Year: "2017"})```
 
