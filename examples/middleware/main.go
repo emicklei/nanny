@@ -1,6 +1,7 @@
 package main
 
 import (
+	"log/slog"
 	"net/http"
 
 	"github.com/emicklei/nanny"
@@ -25,9 +26,10 @@ func main() {
 
 func do(w http.ResponseWriter, r *http.Request) {
 
-	nanny.RecorderFromContext(r.Context()).Group("some operation").
-		Record("test", "hello").
-		Record("ev", Bike{Brand: "Trek", Model: "Emonda", Year: "2017"})
+	rec := nanny.RecorderFromContext(r.Context())
+	rec.Group("some operation").
+		Record(slog.LevelDebug, "test", "hello").
+		Record(slog.LevelInfo, "ev", Bike{Brand: "Trek", Model: "Emonda", Year: "2017"})
 
 	w.Write([]byte("hello nanny"))
 }

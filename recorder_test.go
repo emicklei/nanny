@@ -1,6 +1,7 @@
 package nanny
 
 import (
+	"log/slog"
 	"net/http"
 	"testing"
 	"time"
@@ -8,9 +9,9 @@ import (
 
 func TestRecorder(t *testing.T) {
 	rec := NewRecorder()
-	rec.Record("niks", nil)
-	rec.Record("now", time.Now())
+	rec.Record(slog.LevelDebug, "niks", nil)
+	rec.Record(slog.LevelInfo, "now", time.Now())
 	req, _ := http.NewRequest(http.MethodGet, "http://example.com", nil)
-	rec.Record("request", req)
+	rec.Record(slog.LevelWarn, "request", req)
 	rec.Log()
 }

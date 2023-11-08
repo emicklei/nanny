@@ -12,11 +12,12 @@ import (
 )
 
 type Event struct {
-	Time      time.Time `json:"t,omitempty" `
-	Name      string    `json:"n,omitempty" `
-	Group     string    `json:"g,omitempty" `
-	ValueType string    `json:"_,omitempty" `
-	Value     any       `json:"v"`
+	Time      time.Time  `json:"t" `
+	Level     slog.Level `json:"l" `
+	Name      string     `json:"n" `
+	Group     string     `json:"g" `
+	ValueType string     `json:"r" `
+	Value     any        `json:"v" `
 }
 
 type recorder struct {
@@ -37,7 +38,7 @@ type RetentionStrategy interface {
 }
 
 type CanRecord interface {
-	Record(name string, value any) CanRecord
+	Record(level slog.Level, name string, value any) CanRecord
 	Group(name string) CanRecord
 }
 
@@ -56,14 +57,15 @@ func (r *recorder) Group(name string) CanRecord {
 	}
 }
 
-func (r *recorder) Record(name string, value any) CanRecord {
-	r.record("", name, value)
+func (r *recorder) Record(level slog.Level, name string, value any) CanRecord {
+	r.record(level, "", name, value)
 	return r
 }
 
-func (r *recorder) record(group, name string, value any) {
+func (r *recorder) record(level slog.Level, group, name string, value any) {
 	ev := Event{
 		Time:      time.Now(),
+		Level:     level,
 		Group:     group,
 		Name:      name,
 		ValueType: fmt.Sprintf("%T", value),
@@ -99,9 +101,10 @@ func (r *recorder) Log() {
 	sort.Slice(list, func(i, j int) bool {
 		return list[i].Time.Before(list[j].Time)
 	})
+	// do not use default handler because that could be a recording one
 	th := slog.NewTextHandler(os.Stdout, nil)
 	for _, ev := range list {
-		lr := slog.NewRecord(ev.Time, slog.LevelInfo, ev.Group, 0)
+		lr := slog.NewRecord(ev.Time, ev.Level, ev.Group, 0)
 		lr.AddAttrs(slog.Any(ev.Name, ev.Value))
 		th.Handle(context.Background(), lr)
 	}

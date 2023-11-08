@@ -11,28 +11,35 @@ type SlogHandler struct {
 	mutex    sync.Mutex
 	attrs    []slog.Attr
 	handler  slog.Handler
+	level    slog.Level
 }
 
-func NewLogHandler(recorder CanRecord, passThroughHandler slog.Handler) slog.Handler {
+func NewLogHandler(recorder CanRecord, passThroughHandler slog.Handler, level slog.Level) slog.Handler {
 	return &SlogHandler{
 		recorder: recorder,
 		handler:  passThroughHandler,
+		level:    level,
 	}
 }
 
 // Enabled implements slog.Handler.
 func (h *SlogHandler) Enabled(ctx context.Context, level slog.Level) bool {
-	return h.handler.Enabled(ctx, level)
+	return level >= h.level
 }
 
 // Handle implements slog.Handler.
 func (h *SlogHandler) Handle(ctx context.Context, rec slog.Record) error {
-	g := h.recorder.Group(rec.Message)
-	rec.Attrs(func(a slog.Attr) bool {
-		g.Record(a.Key, a.Value.Any())
-		return true
-	})
-	return h.handler.Handle(ctx, rec)
+	if rec.Level >= h.level {
+		g := h.recorder.Group(rec.Message)
+		rec.Attrs(func(a slog.Attr) bool {
+			g.Record(rec.Level, a.Key, a.Value.Any())
+			return true
+		})
+	}
+	if h.handler.Enabled(ctx, rec.Level) {
+		return h.handler.Handle(ctx, rec)
+	}
+	return nil
 }
 
 // WithAttrs implements slog.Handler.
@@ -46,5 +53,5 @@ func (h *SlogHandler) WithAttrs(attrs []slog.Attr) slog.Handler {
 
 // WithGroup implements slog.Handler.
 func (h *SlogHandler) WithGroup(name string) slog.Handler {
-	return h.handler.WithGroup(name)
+	return h
 }
