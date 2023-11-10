@@ -11,9 +11,10 @@ Recording log events with all attribute values to for remote inspection through 
 	h := slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{Level: slog.LevelInfo})
 
 	// recorder captures debug too
-	l := slog.New(nanny.NewLogHandler(r, h, slog.LevelDebug))
+	l := slog.New(nanny.NewLogHandler(r, h, slog.LevelDebug)) // nanny.LevelTrace
 	slog.SetDefault(l)
 
+	//slog.Handle()
 	slog.Debug("debug", "c", "d")
 	slog.Info("test", "a", "b")
 ```
