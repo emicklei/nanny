@@ -11,8 +11,6 @@ import (
 	"time"
 )
 
-var LevelTrace = slog.Level(-8)
-
 type Event struct {
 	Time      time.Time  `json:"t" `
 	Level     slog.Level `json:"l" `
