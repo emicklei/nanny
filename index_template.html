@@ -1,0 +1,40 @@
+<html>
+
+<head>
+    <title>Sortable</title>
+</head>
+
+<body>
+
+    <table class="sortable">
+        <thead>
+            <tr>
+                <th><span>Time</span></th>
+                <th>Level</th>
+                <th>Group</th>
+                <th>Name</th>
+                <th>Value</th>
+                <th>Type</th>
+            </tr>
+        </thead>
+        <tbody>
+            {{- range .Events}}
+            <tr>
+                <td>{{ .Time.Format "2006-01-02 15:04:05.99" }}</td>
+                <td>{{levelFormat .Level}}</td>
+                <td>{{.Group}}</td>
+                <td>{{.Name}}</td>
+                <td>
+                    <pre>{{valueFormat .Value}}</pre>
+                </td>
+                <td>{{.ValueType}}</td>
+            </tr>
+            {{- end}}
+        </tbody>
+    </table>
+    <link href="https://cdn.jsdelivr.net/gh/tofsjonas/sortable@latest/sortable.min.css" rel="stylesheet" />
+    <script src="https://cdn.jsdelivr.net/gh/tofsjonas/sortable@latest/sortable.min.js"></script>
+
+</body>
+
+</html>
