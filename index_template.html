@@ -2,6 +2,18 @@
 
 <head>
     <title>Sortable</title>
+    <style>
+        td.value {
+            cursor: pointer;
+            max-width: 20em;
+            overflow: hidden;
+            white-space: nowrap;
+            text-overflow: ellipsis;
+        }
+        tr.summary:not(.with-content) + tr.content {
+            display: none;
+        }
+    </style>
 </head>
 
 <body>
@@ -18,23 +30,61 @@
             </tr>
         </thead>
         <tbody>
-            {{- range .Events}}
-            <tr>
-                <td>{{ .Time.Format "2006-01-02 15:04:05.99" }}</td>
-                <td>{{levelFormat .Level}}</td>
-                <td>{{.Group}}</td>
-                <td>{{.Name}}</td>
-                <td>
-                    <pre>{{valueFormat .Value}}</pre>
+            {{- range $index, $event := .Events}}
+            <tr class="summary" data-index="{{$index}}">
+                <td>{{$event.Time.Format "2006-01-02 15:04:05.99" }}</td>
+                <td>{{levelFormat $event.Level}}</td>
+                <td>{{$event.Group}}</td>
+                <td>{{$event.Name}}</td>
+                <td class="value">{{valueFormat $event.Value}}</td>
+                <td>{{$event.ValueType}}</td>
+            </tr>
+            <tr class="content" data-index="{{$index}}">
+                <td colspan="7">
+                    <pre>{{valueFormat $event.Value}}</pre>
                 </td>
-                <td>{{.ValueType}}</td>
             </tr>
             {{- end}}
         </tbody>
     </table>
     <link href="https://cdn.jsdelivr.net/gh/tofsjonas/sortable@latest/sortable.min.css" rel="stylesheet" />
     <script src="https://cdn.jsdelivr.net/gh/tofsjonas/sortable@latest/sortable.min.js"></script>
+    <script>
+        // Extract summary and content rows separately
+        let summaryRows = document.querySelectorAll("tr.summary");
+        let contentRows = document.querySelectorAll("tr.content");
 
+        // Add click handler to value cells to toggle showing the (JSON) value on separate row.
+        // A class "with-content" is added to the summary row to indicate the content row should be shown.
+        summaryRows.forEach((each) => {
+            each.querySelector("td.value").addEventListener("click", () => {
+                each.classList.toggle("with-content");
+            });
+        });
+
+        // Add pointerdown handler to header row to temporarily remove content rows during sorting.
+        // Since pointerdown is triggered before a click event, the content rows can be removed
+        // before the actual soring begins.
+        let headerRow = document.querySelector("thead");
+        headerRow.addEventListener("pointerdown", () => {
+            contentRows.forEach((each) => { each.remove(); });
+        });
+
+        // Add click handler to document (using same event as used in sortable library)
+        // to restore content rows. Restore operation is performed using setTimeout to
+        // have it run after the event handler is finished.
+        document.addEventListener("click", () => {
+            // Restore content rows after dust settled down
+            window.setTimeout(() => {
+                // Order of rows has changed, but by using relative positioning
+                // (ie insertAdjacentElement("afterend", ...)) it will be added
+                // at the desired location.
+                summaryRows.forEach((each, index) => {
+                    each.insertAdjacentElement("afterend", contentRows[index]);
+                });
+            }, 0);
+        });
+    </script>
 </body>
 
 </html>
