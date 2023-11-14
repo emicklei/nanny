@@ -30,15 +30,19 @@ func main() {
 	http.Handle("/nanny", nanny.NewBrowser(rec))
 
 	// serve
+	slog.Info("open http://localhost:8080/do")
+	slog.Info("then open http://localhost:8080/nanny")
 	http.ListenAndServe(":8080", http.DefaultServeMux)
 }
 
 func do(w http.ResponseWriter, r *http.Request) {
-	slog.Debug("checking...", slog.Any("bike", Bike{Brand: "Trek", Model: "Emonda", Year: "2017"}))
+	l := slog.Default().WithGroup("group")
+
+	l.Debug("checking...", slog.Any("bike", Bike{Brand: "Trek", Model: "Emonda", Year: "2017"}))
 
 	// wont see this event in the recorder
-	slog.Info("no attributes")
+	l.Info("no attributes")
 
-	slog.Info("one attribute", slog.String("bike", "Trek"))
+	l.Info("one attribute", slog.String("bike", "Trek"))
 	io.WriteString(w, "done")
 }

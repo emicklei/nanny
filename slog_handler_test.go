@@ -2,6 +2,7 @@ package nanny
 
 import (
 	"context"
+	"fmt"
 	"log/slog"
 	"os"
 	"testing"
@@ -21,5 +22,9 @@ func TestLogHandler(t *testing.T) {
 	slog.Info("test", "a", "b")
 	slog.Error("test", "g", "h")
 
+	gl := slog.Default().WithGroup("grp")
+	gl.Info("test", "g", "h")
+
+	fmt.Println("recorded log:")
 	r.Log()
 }
