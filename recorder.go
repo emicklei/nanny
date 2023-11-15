@@ -35,9 +35,6 @@ func WithMaxEvents(maxEvents int) Option {
 	}
 }
 
-type RetentionStrategy interface {
-}
-
 type CanRecord interface {
 	Record(level slog.Level, message, name string, value any) CanRecord
 	Group(name string) CanRecord

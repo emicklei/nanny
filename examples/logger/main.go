@@ -36,13 +36,16 @@ func main() {
 }
 
 func do(w http.ResponseWriter, r *http.Request) {
-	l := slog.Default().WithGroup("group")
+	l := slog.Default().WithGroup("in do")
 
 	l.Debug("checking...", slog.Any("bike", Bike{Brand: "Trek", Model: "Emonda", Year: "2017"}))
 
 	// wont see this event in the recorder
 	l.Info("no attributes")
 
-	l.Info("one attribute", slog.String("bike", "Trek"))
+	ll := l.WithGroup("nested group in do")
+
+	ll.Info("one attribute", slog.String("bike", "Trek"))
+
 	io.WriteString(w, "done")
 }

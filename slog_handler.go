@@ -46,6 +46,9 @@ func (h *SlogHandler) Handle(ctx context.Context, rec slog.Record) error {
 
 // WithAttrs implements slog.Handler.
 func (h *SlogHandler) WithAttrs(attrs []slog.Attr) slog.Handler {
+	if len(attrs) == 0 {
+		return h
+	}
 	ah := NewLogHandler(h.recorder, h.handler.WithAttrs(attrs), h.level)
 	ah.attrs = attrs
 	return ah
@@ -53,6 +56,9 @@ func (h *SlogHandler) WithAttrs(attrs []slog.Attr) slog.Handler {
 
 // WithGroup implements slog.Handler.
 func (h *SlogHandler) WithGroup(name string) slog.Handler {
+	if name == "" {
+		return h
+	}
 	gh := NewLogHandler(h.recorder, h.handler, h.level)
 	gh.group = name
 	if h.group != "" {
