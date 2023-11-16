@@ -2,13 +2,131 @@
 
 <head>
     <title>Nanny</title>
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+        body {
+            font-family: "Open Sans", Tahoma, Geneva, sans-serif;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+        table {
+            border-spacing: 0;
+        }
+        /*
+            Header row is dark gray with white text.
+        */
+        thead tr {
+            background-color: #808080;
+            color: #ffffff;
+        }
+        th {
+            text-align: left;
+            font-weight: normal;
+        }
+        /*
+           Header has rounded border on top.
+        */
+        th:first-child {
+            border-top-left-radius: 4px;
+        }
+        th:last-child {
+            border-top-right-radius: 4px;
+        }
+        /*
+           All secondary logical rows are gray.
+           Since we have 2 physical rows per logical row, use '4n + 1'
+           and '4n + 2' instead of '2n + 1'.
+         */
+        tbody tr:nth-child(4n + 1) {
+            background-color: #e4e4e4;
+        }
+        tbody tr:nth-child(4n + 2) {
+            background-color: #e4e4e4;
+        }
+        /*
+           All gray rows have a rounded border.
+        */
+        tbody tr:nth-child(4n + 1) td:first-child {
+            border-top-left-radius: 4px;
+            border-bottom-left-radius: 4px;
+        }
+        tbody tr:nth-child(4n + 1) td:last-child {
+            border-top-right-radius: 4px;
+            border-bottom-right-radius: 4px;
+        }
+        /*
+           Except for top row, which is attached to the header row
+           and does not have a rounded top border.
+        */
+        tbody tr:first-child td:first-child {
+            border-top-left-radius: 0;
+        }
+        tbody tr:first-child td:last-child {
+            border-top-right-radius: 0;
+        }
+        /*
+           All content rows (showing JSON) have a rounded bottom border.
+        */
+        tbody tr:nth-child(4n + 2) td:first-child {
+            border-bottom-left-radius: 4px;
+        }
+        tbody tr:nth-child(4n + 2) td:last-child {
+            border-bottom-right-radius: 4px;
+        }
+        /*
+           If content row is shown, remove rounded bottom border from
+           summary row, because content (JSON) is attached to this summary row.
+        */
+        tr.summary.with-content td:first-child {
+            border-bottom-left-radius: 0;
+        }
+        tr.summary.with-content td:last-child {
+            border-bottom-right-radius: 0;
+        }
+        /*
+           Hide content row if not requested to show it.
+        */
+        tr.summary:not(.with-content) + tr.content {
+            display: none;
+        }
+        /*
+           Value cell is clickable and has maximum width to prevent overflow.
+        */
+        td.value {
+            cursor: pointer;
+            width: 20em;
+            overflow: hidden;
+            white-space: nowrap;
+            text-overflow: ellipsis;
+        }
+        tr.content td {
+            white-space: pre;
+            padding-bottom: 1em;
+        }
+        td.toggler div {
+            width: 1em;
+            height: 1em;
+            cursor: pointer;
+            transform: rotate(0deg);
+            transition: transform .5s ease 0s;
+        }
+        tr.with-content td.toggler div {
+            transform: rotate(90deg)translate(0.2em,0.1em);
+        }
+        td, th {
+            padding: 10px;
+        }
+    </style>
 </head>
 
 <body>   
     <table class="sortable">
         <thead>
             <tr>
-                <th><span>Time</span></th>
+                <th>&nbsp;</th>
+                <th>Time</th>
                 <th>Level</th>
                 <th>Group</th>
                 <th>Message</th>
@@ -20,22 +138,40 @@
         <tbody>
             {{- range .Groups}}
             {{- range .Events}}
-            <tr>
+            <tr class="summary">
+                <td class="toggler"><div>▶</div></td>
                 <td>{{ .Time.Format "2006-01-02 15:04:05.99" }}</td>
                 <td>{{levelFormat .Level}}</td>
                 <td>{{.Group}}</td>
                 <td>{{.Message}}</td>
                 <td>{{.Name}}</td>
-                <td>
-                    <pre>{{valueFormat .Value}}</pre>
-                </td>
+                <td class="value">{{valueFormat .Value}}</td>
                 <td>{{.ValueType}}</td>
+            </tr>
+            <tr class="content">
+                <td></td>
+                <td colspan="7">{{valueFormat .Value}}</td>
             </tr>
             {{- end}}
             {{- end}}
         </tbody>
     </table>
-    
+    <script>
+        // Extract summary and content rows separately
+        let summaryRows = document.querySelectorAll("tr.summary");
+        let contentRows = document.querySelectorAll("tr.content");
+
+        // Add click handler to value cells to toggle showing the (JSON) value on separate row.
+        // A class "with-content" is added to the summary row to indicate the content row should be shown.
+        summaryRows.forEach((each) => {
+            each.querySelector("td:first-child").addEventListener("click", () => {
+                each.classList.toggle("with-content");
+            });
+            each.querySelector("td.value").addEventListener("click", () => {
+                each.classList.toggle("with-content");
+            });
+        });
+    </script>
 </body>
 
 </html>
