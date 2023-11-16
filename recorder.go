@@ -90,6 +90,10 @@ func (r *recorder) record(level slog.Level, group, message, name string, value a
 	}
 	ev.Value = doc
 	r.events = append(r.events, ev)
+	// remove old events
+	if len(r.events) > r.maxEvents {
+		r.events = r.events[1:]
+	}
 }
 
 // Log outputs all events using the TextHandler
