@@ -23,7 +23,8 @@ func TestLogHandler(t *testing.T) {
 	slog.Error("test", "g", "h")
 
 	gl := slog.Default().WithGroup("grp")
-	gl.Info("test", "g", "h")
+	gl.Info("test1", "i", "j")
+	gl.Info("test2", "k", "l")
 
 	fmt.Println("recorded log:")
 	r.Log()

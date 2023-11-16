@@ -130,29 +130,25 @@
                 <th>Level</th>
                 <th>Group</th>
                 <th>Message</th>
-                <th>Name</th>
-                <th>Value</th>
-                <th>Type</th>
+                <th>Attributes</th>
             </tr>
         </thead>
         <tbody>
             {{- range .Groups}}
-            {{- range .Events}}
-            <tr class="summary">
-                <td class="toggler"><div>▶</div></td>
-                <td>{{ .Time.Format "2006-01-02 15:04:05.99" }}</td>
-                <td>{{levelFormat .Level}}</td>
-                <td>{{.Group}}</td>
-                <td>{{.Message}}</td>
-                <td>{{.Name}}</td>
-                <td class="value">{{valueFormat .Value}}</td>
-                <td>{{.ValueType}}</td>
-            </tr>
-            <tr class="content">
-                <td></td>
-                <td colspan="7">{{valueFormat .Value}}</td>
-            </tr>
-            {{- end}}
+                {{- range .Events}}
+                <tr class="summary">
+                    <td class="toggler"><div>▶</div></td>
+                    <td>{{ .Time.Format "2006-01-02 15:04:05.99" }}</td>
+                    <td>{{levelFormat .Level}}</td>
+                    <td>{{.Group}}</td>
+                    <td>{{.Message}}</td>
+                    <td>{{keysFormat .Keys}}</td>
+                </tr>
+                <tr class="content">
+                    <td></td>
+                    <td colspan="5">{{valueFormat .Attrs}}</td>
+                </tr>
+                {{- end}}
             {{- end}}
         </tbody>
     </table>

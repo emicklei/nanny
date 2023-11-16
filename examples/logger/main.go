@@ -13,9 +13,11 @@ type Bike struct {
 	Brand, Model, Year string
 }
 
+const eventGroupMarker = "httpHandleFunc"
+
 func main() {
 	// record max 100 events
-	rec := nanny.NewRecorder(nanny.WithMaxEvents(100))
+	rec := nanny.NewRecorder(nanny.WithMaxEvents(100), nanny.WithGroupMarker(eventGroupMarker))
 
 	// fallback logger (cannot be the default handler)
 	txt := slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{Level: slog.LevelDebug})
@@ -30,22 +32,27 @@ func main() {
 	http.Handle("/nanny", nanny.NewBrowser(rec))
 
 	// serve
-	slog.Info("open http://localhost:8080/do")
-	slog.Info("then open http://localhost:8080/nanny")
+	slog.Info("to test, open", "url", "http http://localhost:8080/do")
+	slog.Info("to see events, open", "url", "http://localhost:8080/nanny")
 	http.ListenAndServe(":8080", http.DefaultServeMux)
 }
 
 func do(w http.ResponseWriter, r *http.Request) {
-	l := slog.Default().WithGroup("in do")
+	// start event group
+	glog := slog.Default().With("do", eventGroupMarker)
 
-	l.Debug("checking...", slog.Any("bike", Bike{Brand: "Trek", Model: "Emonda", Year: "2017"}))
+	// attributes
+	glog.Debug("checking...", slog.Any("bike", Bike{Brand: "Trek", Model: "Emonda", Year: "2017"}))
 
 	// wont see this event in the recorder
-	l.Info("no attributes")
+	glog.Info("no attributes")
 
-	ll := l.WithGroup("nested group in do")
+	// attributes without group
+	glog.Info("two attributes", slog.String("bike", "Specialized"), slog.String("size", "29inch"))
 
-	ll.Info("one attribute", slog.String("bike", "Trek"))
+	// attribute group
+	ag := glog.WithGroup("myattrs")
+	ag.Info("two attributes in group", slog.String("bike", "Trek"), slog.String("size", "27inch"))
 
 	io.WriteString(w, "done")
 }

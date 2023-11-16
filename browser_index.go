@@ -42,6 +42,9 @@ func (b *Browser) serveIndex(w http.ResponseWriter, r *http.Request) {
 				return "?"
 			}
 		},
+		"keysFormat": func(v any) string {
+			return strings.Join(v.([]string), ",")
+		},
 	}
 	tmpl, err := template.New("tt").Funcs(fm).Parse(indexHTML)
 	if err != nil {

@@ -14,7 +14,6 @@ Recording log events with all attribute values to for remote inspection through 
 	l := slog.New(nanny.NewLogHandler(r, h, slog.LevelDebug)) // nanny.LevelTrace
 	slog.SetDefault(l)
 
-	//slog.Handle()
 	slog.Debug("debug", "c", "d")
 	slog.Info("test", "a", "b")
 ```
@@ -34,14 +33,14 @@ Recording log events with all attribute values to for remote inspection through 
   {
     "t": "2023-11-08T18:15:14.349402+01:00",
     "l": "DEBUG",
-	"g" : "corr-id",
-    "n": "bike",
-    "m": "checking...",
-    "r": "main.Bike",
-    "v": {
-      "Brand": "Trek",
-      "Model": "Emonda",
-      "Year": "2017"
+	"g" : "some group", 
+    "m": "checking...", 
+    "a": {
+      "bike": {
+		"Brand": "Trek",
+      	"Model": "Emonda",
+      	"Year": "2017"
+	  }
     }
 ```
 |field|comment|
@@ -49,7 +48,5 @@ Recording log events with all attribute values to for remote inspection through 
 |t|timestamp|
 |l|log level|
 |g|group|
-|m|message|
-|n|name|
-|r|(reflect) type of value|
-|v|value
+|m|message|  
+|a|attributes|
