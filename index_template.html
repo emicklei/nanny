@@ -1,54 +1,161 @@
 <html>
 
 <head>
-    <title>Sortable</title>
+    <title>Nanny</title>
     <style>
+        * {
+            box-sizing: border-box;
+        }
+        body {
+            font-family: "Open Sans", Tahoma, Geneva, sans-serif;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+        table {
+            border-spacing: 0;
+        }
+        /*
+            Header row is dark gray with white text.
+        */
+        thead tr {
+            background-color: #808080;
+            color: #ffffff;
+        }
+        th {
+            text-align: left;
+            font-weight: normal;
+        }
+        /*
+           Header has rounded border on top.
+        */
+        th:first-child {
+            border-top-left-radius: 4px;
+        }
+        th:last-child {
+            border-top-right-radius: 4px;
+        }
+        /*
+           All secondary logical rows are gray.
+           Since we have 2 physical rows per logical row, use '4n + 1'
+           and '4n + 2' instead of '2n + 1'.
+         */
+        tbody tr:nth-child(4n + 1) {
+            background-color: #e4e4e4;
+        }
+        tbody tr:nth-child(4n + 2) {
+            background-color: #e4e4e4;
+        }
+        /*
+           All gray rows have a rounded border.
+        */
+        tbody tr:nth-child(4n + 1) td:first-child {
+            border-top-left-radius: 4px;
+            border-bottom-left-radius: 4px;
+        }
+        tbody tr:nth-child(4n + 1) td:last-child {
+            border-top-right-radius: 4px;
+            border-bottom-right-radius: 4px;
+        }
+        /*
+           Except for top row, which is attached to the header row
+           and does not have a rounded top border.
+        */
+        tbody tr:first-child td:first-child {
+            border-top-left-radius: 0;
+        }
+        tbody tr:first-child td:last-child {
+            border-top-right-radius: 0;
+        }
+        /*
+           All content rows (showing JSON) have a rounded bottom border.
+        */
+        tbody tr:nth-child(4n + 2) td:first-child {
+            border-bottom-left-radius: 4px;
+        }
+        tbody tr:nth-child(4n + 2) td:last-child {
+            border-bottom-right-radius: 4px;
+        }
+        /*
+           If content row is shown, remove rounded bottom border from
+           summary row, because content (JSON) is attached to this summary row.
+        */
+        tr.summary.with-content td:first-child {
+            border-bottom-left-radius: 0;
+        }
+        tr.summary.with-content td:last-child {
+            border-bottom-right-radius: 0;
+        }
+        /*
+           Hide content row if not requested to show it.
+        */
+        tr.summary:not(.with-content) + tr.content {
+            display: none;
+        }
+        /*
+           Value cell is clickable and has maximum width to prevent overflow.
+        */
         td.value {
             cursor: pointer;
-            max-width: 20em;
+            width: 20em;
             overflow: hidden;
             white-space: nowrap;
             text-overflow: ellipsis;
         }
-        tr.summary:not(.with-content) + tr.content {
-            display: none;
+        tr.content td {
+            white-space: pre;
+            padding-bottom: 1em;
+        }
+        td.toggler div {
+            width: 1em;
+            height: 1em;
+            cursor: pointer;
+            transform: rotate(0deg);
+            transition: transform .5s ease 0s;
+        }
+        tr.with-content td.toggler div {
+            transform: rotate(90deg)translate(0.2em,0.1em);
+        }
+        td, th {
+            padding: 10px;
         }
     </style>
 </head>
 
-<body>
-
+<body>   
     <table class="sortable">
         <thead>
             <tr>
-                <th><span>Time</span></th>
+                <th>&nbsp;</th>
+                <th>Time</th>
                 <th>Level</th>
                 <th>Group</th>
+                <th>Message</th>
                 <th>Name</th>
                 <th>Value</th>
                 <th>Type</th>
             </tr>
         </thead>
         <tbody>
-            {{- range $index, $event := .Events}}
-            <tr class="summary" data-index="{{$index}}">
-                <td>{{$event.Time.Format "2006-01-02 15:04:05.99" }}</td>
-                <td>{{levelFormat $event.Level}}</td>
-                <td>{{$event.Group}}</td>
-                <td>{{$event.Name}}</td>
-                <td class="value">{{valueFormat $event.Value}}</td>
-                <td>{{$event.ValueType}}</td>
+            {{- range .Groups}}
+            {{- range .Events}}
+            <tr class="summary">
+                <td class="toggler"><div>▶</div></td>
+                <td>{{ .Time.Format "2006-01-02 15:04:05.99" }}</td>
+                <td>{{levelFormat .Level}}</td>
+                <td>{{.Group}}</td>
+                <td>{{.Message}}</td>
+                <td>{{.Name}}</td>
+                <td class="value">{{valueFormat .Value}}</td>
+                <td>{{.ValueType}}</td>
             </tr>
-            <tr class="content" data-index="{{$index}}">
-                <td colspan="7">
-                    <pre>{{valueFormat $event.Value}}</pre>
-                </td>
+            <tr class="content">
+                <td></td>
+                <td colspan="7">{{valueFormat .Value}}</td>
             </tr>
+            {{- end}}
             {{- end}}
         </tbody>
     </table>
-    <link href="https://cdn.jsdelivr.net/gh/tofsjonas/sortable@latest/sortable.min.css" rel="stylesheet" />
-    <script src="https://cdn.jsdelivr.net/gh/tofsjonas/sortable@latest/sortable.min.js"></script>
     <script>
         // Extract summary and content rows separately
         let summaryRows = document.querySelectorAll("tr.summary");
@@ -57,32 +164,12 @@
         // Add click handler to value cells to toggle showing the (JSON) value on separate row.
         // A class "with-content" is added to the summary row to indicate the content row should be shown.
         summaryRows.forEach((each) => {
+            each.querySelector("td:first-child").addEventListener("click", () => {
+                each.classList.toggle("with-content");
+            });
             each.querySelector("td.value").addEventListener("click", () => {
                 each.classList.toggle("with-content");
             });
-        });
-
-        // Add pointerdown handler to header row to temporarily remove content rows during sorting.
-        // Since pointerdown is triggered before a click event, the content rows can be removed
-        // before the actual soring begins.
-        let headerRow = document.querySelector("thead");
-        headerRow.addEventListener("pointerdown", () => {
-            contentRows.forEach((each) => { each.remove(); });
-        });
-
-        // Add click handler to document (using same event as used in sortable library)
-        // to restore content rows. Restore operation is performed using setTimeout to
-        // have it run after the event handler is finished.
-        document.addEventListener("click", () => {
-            // Restore content rows after dust settled down
-            window.setTimeout(() => {
-                // Order of rows has changed, but by using relative positioning
-                // (ie insertAdjacentElement("afterend", ...)) it will be added
-                // at the desired location.
-                summaryRows.forEach((each, index) => {
-                    each.insertAdjacentElement("afterend", contentRows[index]);
-                });
-            }, 0);
         });
     </script>
 </body>

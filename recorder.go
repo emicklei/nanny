@@ -14,6 +14,7 @@ import (
 type Event struct {
 	Time      time.Time  `json:"t" `
 	Level     slog.Level `json:"l" `
+	Message   string     `json:"m" `
 	Name      string     `json:"n" `
 	Group     string     `json:"g" `
 	ValueType string     `json:"r" `
@@ -34,11 +35,8 @@ func WithMaxEvents(maxEvents int) Option {
 	}
 }
 
-type RetentionStrategy interface {
-}
-
 type CanRecord interface {
-	Record(level slog.Level, name string, value any) CanRecord
+	Record(level slog.Level, message, name string, value any) CanRecord
 	Group(name string) CanRecord
 }
 
@@ -52,21 +50,22 @@ func NewRecorder(opts ...Option) *recorder {
 
 func (r *recorder) Group(name string) CanRecord {
 	return &EventGroup{
-		recorder:  r,
-		groupName: name,
+		recorder: r,
+		group:    name,
 	}
 }
 
-func (r *recorder) Record(level slog.Level, name string, value any) CanRecord {
-	r.record(level, "", name, value)
+func (r *recorder) Record(level slog.Level, message, name string, value any) CanRecord {
+	r.record(level, "", message, name, value)
 	return r
 }
 
-func (r *recorder) record(level slog.Level, group, name string, value any) {
+func (r *recorder) record(level slog.Level, group, message, name string, value any) {
 	ev := Event{
 		Time:      time.Now(),
 		Level:     level,
 		Group:     group,
+		Message:   message,
 		Name:      name,
 		ValueType: fmt.Sprintf("%T", value),
 	}
@@ -91,6 +90,10 @@ func (r *recorder) record(level slog.Level, group, name string, value any) {
 	}
 	ev.Value = doc
 	r.events = append(r.events, ev)
+	// remove old events
+	if len(r.events) > r.maxEvents {
+		r.events = r.events[1:]
+	}
 }
 
 // Log outputs all events using the TextHandler
@@ -105,7 +108,10 @@ func (r *recorder) Log() {
 	// do not use default handler because that could be a recording one
 	th := slog.NewTextHandler(os.Stdout, nil)
 	for _, ev := range list {
-		lr := slog.NewRecord(ev.Time, ev.Level, ev.Group, 0)
+		lr := slog.NewRecord(ev.Time, ev.Level, ev.Message, 0)
+		if ev.Group != "" {
+			lr.AddAttrs(slog.Any("group", ev.Group))
+		}
 		lr.AddAttrs(slog.Any(ev.Name, ev.Value))
 		th.Handle(context.Background(), lr)
 	}

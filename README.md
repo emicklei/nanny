@@ -3,7 +3,7 @@
 Recording log events with all attribute values to for remote inspection through HTTP.
 
 
-## use as slog Handler
+## usage
 
 ```go
 	r := nanny.NewRecorder()
@@ -18,30 +18,9 @@ Recording log events with all attribute values to for remote inspection through 
 	slog.Debug("debug", "c", "d")
 	slog.Info("test", "a", "b")
 ```
+ 
 
-## use in HTTP Middleware
-
-```go
-	rec := nanny.NewRecorder(nanny.WithMaxEvents(100))
-
-	// record events
-	http.Handle("/path", nanny.NewRecordingHTTPHandler(http.HandlerFunc(doPath), rec))
-```
-Then in your http handle func:
-
-```go
-func doPath(w http.ResponseWriter, r *http.Request) {
-
-	rec := nanny.RecorderFromContext(r.Context())
-	rec.Group("doPath").
-		Record(slog.LevelDebug, "test", "hello").
-		Record(slog.LevelInfo, "ev", Bike{Brand: "Trek", Model: "Emonda", Year: "2017"})```
-
-    ...
-}
-```
-
-## serve the records as JSON
+## serve the records
 
 ```go
 	// serve captured events
@@ -55,8 +34,9 @@ func doPath(w http.ResponseWriter, r *http.Request) {
   {
     "t": "2023-11-08T18:15:14.349402+01:00",
     "l": "DEBUG",
+	"g" : "corr-id",
     "n": "bike",
-    "g": "checking...",
+    "m": "checking...",
     "r": "main.Bike",
     "v": {
       "Brand": "Trek",
@@ -68,7 +48,8 @@ func doPath(w http.ResponseWriter, r *http.Request) {
 |-|-|
 |t|timestamp|
 |l|log level|
-|n|name|
 |g|group|
+|m|message|
+|n|name|
 |r|(reflect) type of value|
 |v|value

@@ -3,18 +3,17 @@ package nanny
 import (
 	"context"
 	"log/slog"
-	"sync"
 )
 
 type SlogHandler struct {
 	recorder CanRecord
-	mutex    sync.Mutex
 	attrs    []slog.Attr
 	handler  slog.Handler
+	group    string
 	level    slog.Level
 }
 
-func NewLogHandler(recorder CanRecord, passThroughHandler slog.Handler, level slog.Level) slog.Handler {
+func NewLogHandler(recorder CanRecord, passThroughHandler slog.Handler, level slog.Level) *SlogHandler {
 	return &SlogHandler{
 		recorder: recorder,
 		handler:  passThroughHandler,
@@ -30,9 +29,12 @@ func (h *SlogHandler) Enabled(ctx context.Context, level slog.Level) bool {
 // Handle implements slog.Handler.
 func (h *SlogHandler) Handle(ctx context.Context, rec slog.Record) error {
 	if rec.Level >= h.level {
-		g := h.recorder.Group(rec.Message)
+		target := h.recorder
+		if h.group != "" {
+			target = target.Group(h.group)
+		}
 		rec.Attrs(func(a slog.Attr) bool {
-			g.Record(rec.Level, a.Key, a.Value.Any())
+			target.Record(rec.Level, rec.Message, a.Key, a.Value.Any())
 			return true
 		})
 	}
@@ -44,14 +46,23 @@ func (h *SlogHandler) Handle(ctx context.Context, rec slog.Record) error {
 
 // WithAttrs implements slog.Handler.
 func (h *SlogHandler) WithAttrs(attrs []slog.Attr) slog.Handler {
-	h.mutex.Lock()
-	defer h.mutex.Unlock()
-	h.attrs = append(h.attrs, attrs...)
-	h.handler = h.handler.WithAttrs(attrs)
-	return h
+	if len(attrs) == 0 {
+		return h
+	}
+	ah := NewLogHandler(h.recorder, h.handler.WithAttrs(attrs), h.level)
+	ah.attrs = attrs
+	return ah
 }
 
 // WithGroup implements slog.Handler.
 func (h *SlogHandler) WithGroup(name string) slog.Handler {
-	return h
+	if name == "" {
+		return h
+	}
+	gh := NewLogHandler(h.recorder, h.handler, h.level)
+	gh.group = name
+	if h.group != "" {
+		gh.group = h.group + "." + name
+	}
+	return gh
 }
