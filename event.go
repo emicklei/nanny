@@ -11,5 +11,4 @@ type Event struct {
 	Message string     `json:"m" `
 	Group   string     `json:"g" ` // group name of events
 	Attrs   any        `json:"a" `
-	Keys    []string   `json:"-" `
 }

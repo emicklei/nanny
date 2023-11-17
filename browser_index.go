@@ -2,10 +2,13 @@ package nanny
 
 import (
 	"encoding/json"
+	"fmt"
 	"html/template"
 	"io"
 	"log/slog"
 	"net/http"
+	"reflect"
+	"sort"
 	"strings"
 
 	_ "embed"
@@ -31,6 +34,7 @@ func (b *Browser) serveIndex(w http.ResponseWriter, r *http.Request) {
 			d, _ := json.MarshalIndent(v, "", "  ")
 			return string(d)
 		},
+		"shortValueFormat": shortValueFormat,
 		"levelFormat": func(v any) string {
 			switch v.(type) {
 			case slog.Level:
@@ -39,7 +43,7 @@ func (b *Browser) serveIndex(w http.ResponseWriter, r *http.Request) {
 				}
 				return strings.ToLower(v.(slog.Level).String())
 			default:
-				return "?"
+				return "note"
 			}
 		},
 		"keysFormat": func(v any) string {
@@ -77,4 +81,35 @@ func buildTemplateData(events []Event) templateData {
 	return templateData{
 		Groups: result,
 	}
+}
+
+func shortValueFormat(v any) string {
+	m, ok := v.(map[string]any)
+	if !ok {
+		d, _ := json.Marshal(v)
+		return string(d)
+	}
+	if len(m) == 0 {
+		return ""
+	}
+	keys := make([]string, 0, len(m))
+	for k := range m {
+		keys = append(keys, k)
+	}
+	sort.Strings(keys)
+	sb := new(strings.Builder)
+	for _, k := range keys {
+		v := m[k]
+		if reflect.TypeOf(v).Kind() == reflect.Map {
+			fmt.Fprintf(sb, "%s={...} ", k)
+			continue
+		}
+		s, ok := v.(string)
+		if ok {
+			fmt.Fprintf(sb, "%s=%q ", k, s)
+		} else {
+			fmt.Fprintf(sb, "%s=%v ", k, v)
+		}
+	}
+	return sb.String()
 }

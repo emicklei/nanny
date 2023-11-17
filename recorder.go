@@ -2,6 +2,7 @@ package nanny
 
 import (
 	"context"
+	"encoding/json"
 	"log/slog"
 	"os"
 	"sort"
@@ -49,8 +50,7 @@ func (r *recorder) Record(level slog.Level, group, message string, attrs map[str
 		Level:   level,
 		Group:   group,
 		Message: message,
-		Attrs:   attrs,
-		Keys:    buildKeys(attrs),
+		Attrs:   snapshotAttrs(attrs),
 	}
 	r.mutex.Lock()
 	defer r.mutex.Unlock()
@@ -114,10 +114,17 @@ func (r *recorder) buildGroups() []eventGroup {
 	return groups
 }
 
-func buildKeys(attrs map[string]any) (keys []string) {
-	// todo recurse
-	for k := range attrs {
-		keys = append(keys, k)
+func snapshotAttrs(attrs map[string]any) map[string]any {
+	out := make(map[string]any, len(attrs))
+	data, err := json.Marshal(attrs)
+	if err != nil {
+		out["error"] = err.Error()
+		return out
 	}
-	return
+	err = json.Unmarshal(data, &out)
+	if err != nil {
+		out["error"] = err.Error()
+		return out
+	}
+	return out
 }

@@ -66,5 +66,7 @@ func (h *SlogHandler) WithGroup(name string) slog.Handler {
 	if name == "" {
 		return h
 	}
-	return NewLogHandler(h.recorder, h.handler.WithGroup(name), h.level)
+	gh := NewLogHandler(h.recorder, h.handler.WithGroup(name), h.level)
+	gh.group = h.group // event group, not attr group
+	return gh
 }

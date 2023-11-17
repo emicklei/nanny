@@ -32,7 +32,7 @@ func main() {
 	http.Handle("/nanny", nanny.NewBrowser(rec))
 
 	// serve
-	slog.Info("to test, open", "url", "http http://localhost:8080/do")
+	slog.Info("to test, open", "url", "http://localhost:8080/do", "port", 8080)
 	slog.Info("to see events, open", "url", "http://localhost:8080/nanny")
 	http.ListenAndServe(":8080", http.DefaultServeMux)
 }
@@ -42,7 +42,8 @@ func do(w http.ResponseWriter, r *http.Request) {
 	glog := slog.Default().With("do", eventGroupMarker)
 
 	// attributes
-	glog.Debug("checking...", slog.Any("bike", Bike{Brand: "Trek", Model: "Emonda", Year: "2017"}))
+	bike := Bike{Brand: "Trek", Model: "Emonda", Year: "2017"}
+	glog.Debug("checking...", slog.Any("bike", bike))
 
 	// wont see this event in the recorder
 	glog.Info("no attributes")
@@ -50,9 +51,14 @@ func do(w http.ResponseWriter, r *http.Request) {
 	// attributes without group
 	glog.Info("two attributes", slog.String("bike", "Specialized"), slog.String("size", "29inch"))
 
-	// attribute group
+	// attribute group within event group
 	ag := glog.WithGroup("myattrs")
-	ag.Info("two attributes in group", slog.String("bike", "Trek"), slog.String("size", "27inch"))
+
+	// modify it
+	bike.Brand = "Specialized"
+	bike.Year = "2018"
+
+	ag.Info("two attributes in attr group in event group", "bike", bike)
 
 	io.WriteString(w, "done")
 }
