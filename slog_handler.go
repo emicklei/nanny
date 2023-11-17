@@ -61,7 +61,12 @@ func (h *SlogHandler) WithAttrs(attrs []slog.Attr) slog.Handler {
 	if len(attrs) == 1 && attrs[0].Value.String() == h.recorder.groupMarker {
 		gh := NewLogHandler(h.recorder, h.handler, h.level)
 		gh.attrGroup = h.attrGroup
-		gh.group = attrs[0].Key
+		ng := attrs[0].Key
+		if gh.group == "" {
+			gh.group = ng
+		} else {
+			gh.group = gh.group + "." + ng
+		}
 		return gh
 	}
 	ah := NewLogHandler(h.recorder, h.handler.WithAttrs(attrs), h.level)

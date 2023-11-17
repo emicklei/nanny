@@ -1,10 +1,12 @@
 package main
 
 import (
+	"fmt"
 	"io"
 	"log/slog"
 	"net/http"
 	"os"
+	"sync/atomic"
 
 	"github.com/emicklei/nanny"
 )
@@ -38,9 +40,18 @@ func main() {
 	http.ListenAndServe(":8080", http.DefaultServeMux)
 }
 
+var request_id int64 = 0
+
+func newRequestID() int64 {
+	atomic.AddInt64(&request_id, 1)
+	return request_id
+}
+
+// http handler
+
 func do(w http.ResponseWriter, r *http.Request) {
 	// start event group
-	glog := slog.Default().With("do", eventGroupMarker)
+	glog := slog.Default().With(fmt.Sprintf("%d:do", newRequestID()), eventGroupMarker)
 
 	// attributes
 	bike := Bike{Brand: "Trek", Model: "Emonda", Year: "2017"}
@@ -58,16 +69,15 @@ func do(w http.ResponseWriter, r *http.Request) {
 	// modify it
 	bike.Brand = "Specialized"
 	bike.Year = "2018"
-
 	ag.Info("two attributes in attr group in event group", "bike", bike, "color", "red")
 
-	internalDo()
+	internalDo(glog)
 
 	io.WriteString(w, "done")
 }
 
-func internalDo() {
+func internalDo(parentLogger *slog.Logger) {
 	// start event group
-	glog := slog.Default().With("internalDo", eventGroupMarker)
+	glog := parentLogger.With("internalDo", eventGroupMarker)
 	glog.Info("do internal stuff")
 }
