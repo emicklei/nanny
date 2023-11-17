@@ -6,14 +6,17 @@
         * {
             box-sizing: border-box;
         }
+
         body {
             font-family: "Open Sans", Tahoma, Geneva, sans-serif;
             -webkit-font-smoothing: antialiased;
             -moz-osx-font-smoothing: grayscale;
         }
+
         table {
             border-spacing: 0;
         }
+
         /*
             Header row is dark gray with white text.
         */
@@ -21,19 +24,23 @@
             background-color: #808080;
             color: #ffffff;
         }
+
         th {
             text-align: left;
             font-weight: normal;
         }
+
         /*
            Header has rounded border on top.
         */
         th:first-child {
             border-top-left-radius: 4px;
         }
+
         th:last-child {
             border-top-right-radius: 4px;
         }
+
         /*
            All secondary logical rows are gray.
            Since we have 2 physical rows per logical row, use '4n + 1'
@@ -42,9 +49,11 @@
         tbody tr:nth-child(4n + 1) {
             background-color: #e4e4e4;
         }
+
         tbody tr:nth-child(4n + 2) {
             background-color: #e4e4e4;
         }
+
         /*
            All gray rows have a rounded border.
         */
@@ -52,10 +61,12 @@
             border-top-left-radius: 4px;
             border-bottom-left-radius: 4px;
         }
+
         tbody tr:nth-child(4n + 1) td:last-child {
             border-top-right-radius: 4px;
             border-bottom-right-radius: 4px;
         }
+
         /*
            Except for top row, which is attached to the header row
            and does not have a rounded top border.
@@ -63,18 +74,22 @@
         tbody tr:first-child td:first-child {
             border-top-left-radius: 0;
         }
+
         tbody tr:first-child td:last-child {
             border-top-right-radius: 0;
         }
+
         /*
            All content rows (showing JSON) have a rounded bottom border.
         */
         tbody tr:nth-child(4n + 2) td:first-child {
             border-bottom-left-radius: 4px;
         }
+
         tbody tr:nth-child(4n + 2) td:last-child {
             border-bottom-right-radius: 4px;
         }
+
         /*
            If content row is shown, remove rounded bottom border from
            summary row, because content (JSON) is attached to this summary row.
@@ -82,19 +97,23 @@
         tr.summary.with-content td:first-child {
             border-bottom-left-radius: 0;
         }
+
         tr.summary.with-content td:last-child {
             border-bottom-right-radius: 0;
         }
+
         /*
            Hide content row if not requested to show it.
         */
-        tr.summary:not(.with-content) + tr.content {
+        tr.summary:not(.with-content)+tr.content {
             display: none;
         }
+
         tr.content td {
             white-space: pre;
             padding-bottom: 1em;
         }
+
         td.toggler div {
             width: 1em;
             height: 1em;
@@ -102,16 +121,19 @@
             transform: rotate(0deg);
             transition: transform .5s ease 0s;
         }
+
         tr.with-content td.toggler div {
-            transform: rotate(90deg)translate(0.2em,0.1em);
+            transform: rotate(90deg)translate(0.2em, 0.1em);
         }
-        td, th {
+
+        td,
+        th {
             padding: 10px;
         }
     </style>
 </head>
 
-<body>   
+<body>
     <table class="sortable">
         <thead>
             <tr>
@@ -125,20 +147,22 @@
         </thead>
         <tbody>
             {{- range .Groups}}
-                {{- range .Events}}
-                <tr class="summary">
-                    <td class="toggler"><div>▶</div></td>
-                    <td>{{ .Time.Format "2006-01-02 15:04:05.99" }}</td>
-                    <td>{{levelFormat .Level}}</td>
-                    <td>{{.Group}}</td>
-                    <td>{{.Message}}</td>
-                    <td>{{shortValueFormat .Attrs}}</td>
-                </tr>
-                <tr class="content">
-                    <td></td>
-                    <td colspan="5">{{valueFormat .Attrs}}</td>
-                </tr>
-                {{- end}}
+            {{- range .Events}}
+            <tr class="summary">
+                <td class="toggler">
+                    <div>▶</div>
+                </td>
+                <td>{{timeFormat .Time}}</td>
+                <td>{{levelFormat .Level}}</td>
+                <td>{{.Group}}</td>
+                <td>{{.Message}}</td>
+                <td>{{shortValueFormat .Attrs}}</td>
+            </tr>
+            <tr class="content">
+                <td></td>
+                <td colspan="5">{{valueFormat .Attrs}}</td>
+            </tr>
+            {{- end}}
             {{- end}}
         </tbody>
     </table>
