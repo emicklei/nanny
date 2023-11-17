@@ -91,16 +91,6 @@
         tr.summary:not(.with-content) + tr.content {
             display: none;
         }
-        /*
-           Value cell is clickable and has maximum width to prevent overflow.
-        */
-        td.value {
-            cursor: pointer;
-            width: 20em;
-            overflow: hidden;
-            white-space: nowrap;
-            text-overflow: ellipsis;
-        }
         tr.content td {
             white-space: pre;
             padding-bottom: 1em;
@@ -161,9 +151,6 @@
         // A class "with-content" is added to the summary row to indicate the content row should be shown.
         summaryRows.forEach((each) => {
             each.querySelector("td:first-child").addEventListener("click", () => {
-                each.classList.toggle("with-content");
-            });
-            each.querySelector("td.value").addEventListener("click", () => {
                 each.classList.toggle("with-content");
             });
         });
