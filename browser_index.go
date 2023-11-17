@@ -93,6 +93,9 @@ func buildTemplateData(events []Event) templateData {
 }
 
 func shortValueFormat(v any) string {
+	if v == nil {
+		return ""
+	}
 	m, ok := v.(map[string]any)
 	if !ok {
 		d, _ := json.Marshal(v)
@@ -109,6 +112,10 @@ func shortValueFormat(v any) string {
 	sb := new(strings.Builder)
 	for _, k := range keys {
 		v := m[k]
+		if v == nil {
+			fmt.Fprintf(sb, "%s=nil ", k)
+			continue
+		}
 		if reflect.TypeOf(v).Kind() == reflect.Map {
 			fmt.Fprintf(sb, "%s={...} ", k)
 			continue
