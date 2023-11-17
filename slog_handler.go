@@ -6,11 +6,12 @@ import (
 )
 
 type SlogHandler struct {
-	recorder *recorder
-	attrs    []slog.Attr
-	handler  slog.Handler
-	group    string // group name of messages
-	level    slog.Level
+	recorder  *recorder
+	attrs     []slog.Attr
+	handler   slog.Handler
+	group     string // group name of messages
+	attrGroup string
+	level     slog.Level
 }
 
 func NewLogHandler(recorder *recorder, passThroughHandler slog.Handler, level slog.Level) *SlogHandler {
@@ -37,6 +38,12 @@ func (h *SlogHandler) Handle(ctx context.Context, rec slog.Record) error {
 			collect[a.Key] = a.Value.Any()
 			return true
 		})
+		if h.attrGroup != "" {
+			// nest it
+			collect = map[string]any{
+				h.attrGroup: collect,
+			}
+		}
 		h.recorder.Record(rec.Level, h.group, rec.Message, collect)
 	}
 	if h.handler.Enabled(ctx, rec.Level) {
@@ -53,10 +60,13 @@ func (h *SlogHandler) WithAttrs(attrs []slog.Attr) slog.Handler {
 	// todo: only one key with groupmarker
 	if len(attrs) == 1 && attrs[0].Value.String() == h.recorder.groupMarker {
 		gh := NewLogHandler(h.recorder, h.handler, h.level)
+		gh.attrGroup = h.attrGroup
 		gh.group = attrs[0].Key
 		return gh
 	}
 	ah := NewLogHandler(h.recorder, h.handler.WithAttrs(attrs), h.level)
+	ah.group = h.group
+	ah.attrGroup = h.attrGroup
 	ah.attrs = attrs
 	return ah
 }
@@ -68,5 +78,6 @@ func (h *SlogHandler) WithGroup(name string) slog.Handler {
 	}
 	gh := NewLogHandler(h.recorder, h.handler.WithGroup(name), h.level)
 	gh.group = h.group // event group, not attr group
+	gh.attrGroup = name
 	return gh
 }

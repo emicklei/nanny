@@ -32,8 +32,9 @@ func main() {
 	http.Handle("/nanny", nanny.NewBrowser(rec))
 
 	// serve
-	slog.Info("to test, open", "url", "http://localhost:8080/do", "port", 8080)
-	slog.Info("to see events, open", "url", "http://localhost:8080/nanny")
+	slog.Info("to create events, open", "url", "http://localhost:8080/do", "port", 8080)
+	slog.Info("to browse events, open", "url", "http://localhost:8080/nanny")
+	slog.Info("to see events JSON, open", "url", "http://localhost:8080/nanny?do=events")
 	http.ListenAndServe(":8080", http.DefaultServeMux)
 }
 
@@ -58,7 +59,15 @@ func do(w http.ResponseWriter, r *http.Request) {
 	bike.Brand = "Specialized"
 	bike.Year = "2018"
 
-	ag.Info("two attributes in attr group in event group", "bike", bike)
+	ag.Info("two attributes in attr group in event group", "bike", bike, "color", "red")
+
+	internalDo()
 
 	io.WriteString(w, "done")
+}
+
+func internalDo() {
+	// start event group
+	glog := slog.Default().With("internalDo", eventGroupMarker)
+	glog.Info("do internal stuff")
 }
