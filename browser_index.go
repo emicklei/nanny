@@ -21,15 +21,22 @@ var indexHTML string
 const indexHTMLContentType = "text/html; charset=utf-8"
 
 type templateData struct {
-	Groups []templateGroup
+	Events     []Event
+	EventsSeen int64
+	Since      time.Time
 }
-type templateGroup struct {
-	Name   string
-	Events []Event
+
+type eventFilter struct {
+	level string
+	group string
 }
 
 func (b *Browser) serveIndex(w http.ResponseWriter, r *http.Request) {
-
+	r.ParseForm()
+	filter := eventFilter{
+		level: r.Form.Get("level"),
+		group: r.Form.Get("group"),
+	}
 	fm := template.FuncMap{
 		"timeFormat": func(v any) string {
 			s := v.(time.Time).Format("2006-01-02 15:04:05.99")
@@ -65,7 +72,11 @@ func (b *Browser) serveIndex(w http.ResponseWriter, r *http.Request) {
 		io.WriteString(w, err.Error())
 		return
 	}
-	tmplData := buildTemplateData(b.recorder.events)
+	tmplData := templateData{
+		Events:     filtered(b.recorder.events, filter),
+		EventsSeen: b.recorder.stats.Count,
+		Since:      b.recorder.stats.Started,
+	}
 	w.Header().Set("Content-Type", indexHTMLContentType)
 	err = tmpl.Execute(w, tmplData)
 	if err != nil {
@@ -74,21 +85,17 @@ func (b *Browser) serveIndex(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func buildTemplateData(events []Event) templateData {
-	groups := make(map[string][]Event)
-	for _, e := range events {
-		groups[e.Group] = append(groups[e.Group], e)
+func filtered(events []Event, filter eventFilter) (list []Event) {
+	for _, each := range events {
+		if filter.level != "" && strings.ToLower(each.Level.String()) != filter.level {
+			continue
+		}
+		if filter.group != "" && each.Group != filter.group {
+			continue
+		}
+		list = append(list, each)
 	}
-	var result []templateGroup
-	for k, v := range groups {
-		result = append(result, templateGroup{
-			Name:   k,
-			Events: v,
-		})
-	}
-	return templateData{
-		Groups: result,
-	}
+	return
 }
 
 func shortValueFormat(v any) string {

@@ -5,6 +5,7 @@
     <style>
         * {
             box-sizing: border-box;
+            font-size: 12;
         }
 
         body {
@@ -21,7 +22,7 @@
             Header row is dark gray with white text.
         */
         thead tr {
-            background-color: #808080;
+            background-color: #c7c5c5;
             color: #ffffff;
         }
 
@@ -128,7 +129,7 @@
 
         td,
         th {
-            padding: 10px;
+            padding: 4px;
         }
     </style>
 </head>
@@ -145,8 +146,7 @@
                 <th>Attributes</th>
             </tr>
         </thead>
-        <tbody>
-            {{- range .Groups}}
+        <tbody> 
             {{- range .Events}}
             <tr class="summary">
                 <td class="toggler">
@@ -163,9 +163,11 @@
                 <td colspan="5">{{valueFormat .Attrs}}</td>
             </tr>
             {{- end}}
-            {{- end}}
         </tbody>
     </table>
+    <h4>
+        Nanny watched: {{.EventsSeen}} since: {{timeFormat .Since}}
+    </h4>
     <script>
         // Extract summary and content rows separately
         let summaryRows = document.querySelectorAll("tr.summary");

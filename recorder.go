@@ -15,6 +15,12 @@ type recorder struct {
 	events      []Event
 	maxEvents   int
 	groupMarker string
+	stats       *recordingStats
+}
+
+type recordingStats struct {
+	Started time.Time
+	Count   int64
 }
 
 type Option func(*recorder)
@@ -37,6 +43,10 @@ func NewRecorder(opts ...Option) *recorder {
 		events:      []Event{},
 		maxEvents:   100,
 		groupMarker: "func",
+		stats: &recordingStats{
+			Started: time.Now(),
+			Count:   0,
+		},
 	}
 	for _, opt := range opts {
 		opt(r)
@@ -55,6 +65,7 @@ func (r *recorder) Record(level slog.Level, group, message string, attrs map[str
 	r.mutex.Lock()
 	defer r.mutex.Unlock()
 	r.events = append(r.events, ev)
+	r.stats.Count++
 	// remove old events
 	if len(r.events) > r.maxEvents {
 		r.events = r.events[1:]

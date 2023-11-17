@@ -37,6 +37,8 @@ func main() {
 	slog.Info("to create events, open", "url", "http://localhost:8080/do", "port", 8080)
 	slog.Info("to browse events, open", "url", "http://localhost:8080/nanny")
 	slog.Info("to see events JSON, open", "url", "http://localhost:8080/nanny?do=events")
+	slog.Info("to see debug events, open", "url", "http://localhost:8080/nanny?filter=debug")
+	slog.Info("to see group events, open", "url", "http://localhost:8080/nanny?filter=1:do")
 	http.ListenAndServe(":8080", http.DefaultServeMux)
 }
 
