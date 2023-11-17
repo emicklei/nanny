@@ -69,7 +69,6 @@ func (b *Browser) serveIndex(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", indexHTMLContentType)
 	err = tmpl.Execute(w, tmplData)
 	if err != nil {
-		w.WriteHeader(500)
 		io.WriteString(w, err.Error())
 		return
 	}
