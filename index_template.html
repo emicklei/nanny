@@ -155,7 +155,7 @@
                         </td>
                         <td>{{timeFormat .Time}}</td>
                         <td>{{levelFormat .Level}}</td>
-                        <td>{{.Group}}</td>
+                        <td><a href="?group={{.Group}}">{{.Group}}</a></td>
                         <td>{{.Message}}</td>
                         <td>{{shortValueFormat .Attrs}}</td>
                         <tr> 
@@ -168,7 +168,7 @@
                         </td>
                         <td>{{timeFormat .Time}}</td>
                         <td>{{levelFormat .Level}}</td>
-                        <td>{{.Group}}</td>
+                        <td><a href="?group={{.Group}}">{{.Group}}</a></td>
                         <td>{{.Message}}</td>
                         <td>{{shortValueFormat .Attrs}}</td>
                     </tr>
@@ -181,7 +181,7 @@
         </tbody>
     </table>
     <p>
-        Watched: {{.EventsSeen}} since: {{timeFormat .Since}}
+        Watched: {{.EventsSeen}} since: {{timeFormat .Since}} <a href="?">Reset filter</a>
     </p>
     <script>
         // Extract summary and content rows separately

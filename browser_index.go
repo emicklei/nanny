@@ -90,8 +90,13 @@ func filtered(events []Event, filter eventFilter) (list []Event) {
 		if filter.level != "" && strings.ToLower(each.Level.String()) != filter.level {
 			continue
 		}
-		if filter.group != "" && each.Group != filter.group {
-			continue
+		if filter.group != "" {
+			if each.Group == "" {
+				continue
+			}
+			if !strings.HasPrefix(each.Group, filter.group) {
+				continue
+			}
 		}
 		list = append(list, each)
 	}
