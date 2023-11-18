@@ -57,15 +57,14 @@ func (h *SlogHandler) WithAttrs(attrs []slog.Attr) slog.Handler {
 	if len(attrs) == 0 {
 		return h
 	}
-	// todo: only one key with groupmarker
-	if len(attrs) == 1 && attrs[0].Value.String() == h.recorder.groupMarker {
-		gh := NewLogHandler(h.recorder, h.handler, h.level)
+	if v := findGroupMarkerValue(attrs, h.recorder.groupMarker); v != "" {
+		gh := NewLogHandler(h.recorder, h.handler.WithAttrs(attrs), h.level)
 		gh.attrGroup = h.attrGroup
-		ng := attrs[0].Key
-		if gh.group == "" {
+		ng := v
+		if h.group == "" {
 			gh.group = ng
 		} else {
-			gh.group = gh.group + "." + ng
+			gh.group = h.group + "/" + ng
 		}
 		return gh
 	}
@@ -85,4 +84,13 @@ func (h *SlogHandler) WithGroup(name string) slog.Handler {
 	gh.group = h.group // event group, not attr group
 	gh.attrGroup = name
 	return gh
+}
+
+func findGroupMarkerValue(attrs []slog.Attr, marker string) string {
+	for _, a := range attrs {
+		if a.Key == marker {
+			return a.Value.String()
+		}
+	}
+	return ""
 }

@@ -148,26 +148,41 @@
         </thead>
         <tbody> 
             {{- range .Events}}
-            <tr class="summary">
-                <td class="toggler">
-                    <div>▶</div>
-                </td>
-                <td>{{timeFormat .Time}}</td>
-                <td>{{levelFormat .Level}}</td>
-                <td>{{.Group}}</td>
-                <td>{{.Message}}</td>
-                <td>{{shortValueFormat .Attrs}}</td>
-            </tr>
-            <tr class="content">
-                <td></td>
-                <td colspan="5">{{valueFormat .Attrs}}</td>
-            </tr>
+                {{ if eq (len .Attrs) 0 }}
+                    <tr>
+                        <td>
+                            <div></div>
+                        </td>
+                        <td>{{timeFormat .Time}}</td>
+                        <td>{{levelFormat .Level}}</td>
+                        <td>{{.Group}}</td>
+                        <td>{{.Message}}</td>
+                        <td>{{shortValueFormat .Attrs}}</td>
+                        <tr> 
+                        </tr>
+                    </tr>
+                {{- else }}
+                    <tr class="summary">
+                        <td class="toggler">
+                            <div>▶</div>
+                        </td>
+                        <td>{{timeFormat .Time}}</td>
+                        <td>{{levelFormat .Level}}</td>
+                        <td>{{.Group}}</td>
+                        <td>{{.Message}}</td>
+                        <td>{{shortValueFormat .Attrs}}</td>
+                    </tr>
+                    <tr class="content">
+                        <td></td>
+                        <td colspan="5">{{valueFormat .Attrs}}</td>
+                    </tr>
+                {{- end}}
             {{- end}}
         </tbody>
     </table>
-    <h4>
-        Nanny watched: {{.EventsSeen}} since: {{timeFormat .Since}}
-    </h4>
+    <p>
+        Watched: {{.EventsSeen}} since: {{timeFormat .Since}}
+    </p>
     <script>
         // Extract summary and content rows separately
         let summaryRows = document.querySelectorAll("tr.summary");

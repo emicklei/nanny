@@ -19,7 +19,7 @@ const eventGroupMarker = "httpHandleFunc"
 
 func main() {
 	// record max 100 events
-	rec := nanny.NewRecorder(nanny.WithMaxEvents(100), nanny.WithGroupMarker(eventGroupMarker))
+	rec := nanny.NewRecorder(nanny.WithMaxEvents(1000), nanny.WithGroupMarker(eventGroupMarker))
 
 	// fallback logger (cannot be the default handler)
 	txt := slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{Level: slog.LevelDebug})
@@ -31,14 +31,14 @@ func main() {
 	http.HandleFunc("/do", do)
 
 	// serve captured events
-	http.Handle("/nanny", nanny.NewBrowser(rec))
+	http.Handle("/nanny", nanny.NewBrowser(rec, nanny.WithPageSize(100)))
 
 	// serve
 	slog.Info("to create events, open", "url", "http://localhost:8080/do", "port", 8080)
 	slog.Info("to browse events, open", "url", "http://localhost:8080/nanny")
 	slog.Info("to see events JSON, open", "url", "http://localhost:8080/nanny?do=events")
-	slog.Info("to see debug events, open", "url", "http://localhost:8080/nanny?filter=debug")
-	slog.Info("to see group events, open", "url", "http://localhost:8080/nanny?filter=1:do")
+	slog.Info("to see debug events, open", "url", "http://localhost:8080/nanny?level=debug")
+	slog.Info("to see group events, open", "url", "http://localhost:8080/nanny?group=1:do")
 	http.ListenAndServe(":8080", http.DefaultServeMux)
 }
 
@@ -53,7 +53,7 @@ func newRequestID() int64 {
 
 func do(w http.ResponseWriter, r *http.Request) {
 	// start event group
-	glog := slog.Default().With(fmt.Sprintf("%d:do", newRequestID()), eventGroupMarker)
+	glog := slog.Default().With(eventGroupMarker, fmt.Sprintf("%d:do", newRequestID()))
 
 	// attributes
 	bike := Bike{Brand: "Trek", Model: "Emonda", Year: "2017"}
@@ -80,6 +80,6 @@ func do(w http.ResponseWriter, r *http.Request) {
 
 func internalDo(parentLogger *slog.Logger) {
 	// start event group
-	glog := parentLogger.With("internalDo", eventGroupMarker)
+	glog := parentLogger.With(eventGroupMarker, "internalDo")
 	glog.Info("do internal stuff")
 }

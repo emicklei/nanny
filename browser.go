@@ -7,10 +7,25 @@ import (
 
 type Browser struct {
 	recorder *recorder
+	pageSize int
 }
 
-func NewBrowser(rec *recorder) *Browser {
-	return &Browser{recorder: rec}
+type BrowserOption func(b *Browser)
+
+func WithPageSize(size int) BrowserOption {
+	return func(b *Browser) {
+		b.pageSize = size
+	}
+}
+
+func NewBrowser(rec *recorder, opts ...BrowserOption) *Browser {
+	b := &Browser{
+		pageSize: 1000,
+		recorder: rec}
+	for _, opt := range opts {
+		opt(b)
+	}
+	return b
 }
 
 func (b *Browser) ServeHTTP(w http.ResponseWriter, r *http.Request) {

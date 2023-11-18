@@ -19,6 +19,19 @@ Recording log events with all attribute values to for remote inspection through 
 ```
  
 
+## event groups
+
+Events can be grouped e.g. by function name or for the processing of a specific HTTP request.
+
+```go
+	l := slog.Default().With("func", "myFunctionName")
+	l.Debug("var", "value")	
+```
+
+Here `func` is the default event group marker.
+You can change this value to whatever you want using the RecorderOption `WithGroupMarker`.
+
+
 ## serve the records
 
 ```go
@@ -33,7 +46,7 @@ Recording log events with all attribute values to for remote inspection through 
   {
     "t": "2023-11-08T18:15:14.349402+01:00",
     "l": "DEBUG",
-	"g" : "some group", 
+    "g" : "some group", 
     "m": "checking...", 
     "a": {
       "bike": {

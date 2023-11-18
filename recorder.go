@@ -23,21 +23,21 @@ type recordingStats struct {
 	Count   int64
 }
 
-type Option func(*recorder)
+type RecorderOption func(*recorder)
 
-func WithMaxEvents(maxEvents int) Option {
+func WithMaxEvents(maxEvents int) RecorderOption {
 	return func(r *recorder) {
 		r.maxEvents = maxEvents
 	}
 }
 
-func WithGroupMarker(marker string) Option {
+func WithGroupMarker(marker string) RecorderOption {
 	return func(r *recorder) {
 		r.groupMarker = marker
 	}
 }
 
-func NewRecorder(opts ...Option) *recorder {
+func NewRecorder(opts ...RecorderOption) *recorder {
 	r := &recorder{
 		mutex:       sync.RWMutex{},
 		events:      []Event{},
@@ -86,10 +86,12 @@ func (r *recorder) Log() {
 	for _, eg := range r.buildGroups() {
 		for _, ev := range eg.events {
 			lr := slog.NewRecord(ev.Time, ev.Level, ev.Message, 0)
-			// if ev.Group != "" {
-			// 	lr.AddAttrs(slog.Any("nanny.group", ev.Group))
-			// }
-			// lr.AddAttrs(slog.Any(ev.Name, ev.Value))
+			if ev.Group != "" {
+				lr.AddAttrs(slog.Any("nanny.group", ev.Group))
+			}
+			for k, v := range ev.Attrs {
+				lr.AddAttrs(slog.Any(k, v))
+			}
 			th.Handle(context.Background(), lr)
 		}
 	}
