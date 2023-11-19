@@ -6,16 +6,26 @@ Recording log events with all attribute values to for remote inspection through 
 ## usage
 
 ```go
-	r := nanny.NewRecorder()
-	// fallback only info
-	h := slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{Level: slog.LevelInfo})
+	nanny.SetupDefault()
+	slog.Debug("debug", "hello", "world")
+```
 
-	// recorder captures debug too
-	l := slog.New(nanny.NewLogHandler(r, h, slog.LevelDebug)) // nanny.LevelTrace
+or by composing the setup yourself:
+
+
+```go
+	r := nanny.NewRecorder()
+
+	// recorder captures debug 
+	l := slog.New(nanny.NewLogHandler(r, slog.Default().Handler(), slog.LevelDebug)) // or nanny.LevelTrace
+	
+	// replace the default logger
 	slog.SetDefault(l)
 
-	slog.Debug("debug", "c", "d")
-	slog.Info("test", "a", "b")
+	// serve the events
+	http.Handle("/nanny", nanny.NewBrowser(r))
+
+	slog.Debug("debug", "hello", "world")
 ```
  
 
@@ -30,14 +40,6 @@ Events can be grouped e.g. by function name or for the processing of a specific 
 
 Here `func` is the default event group marker.
 You can change this value to whatever you want using the RecorderOption `WithGroupMarker`.
-
-
-## serve the records
-
-```go
-	// serve captured events
-	http.Handle("/nanny", nanny.NewBrowser(r))
-```
 
 
 ## sample record served as JSON
