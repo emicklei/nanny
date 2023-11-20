@@ -5,7 +5,6 @@
     <style>
         * {
             box-sizing: border-box;
-            font-size: 12;
         }
 
         body {
@@ -146,37 +145,37 @@
                 <th>Attributes</th>
             </tr>
         </thead>
-        <tbody> 
+        <tbody>
             {{- range .Events}}
-                {{ if eq (len .Attrs) 0 }}
-                    <tr>
-                        <td>
-                            <div></div>
-                        </td>
-                        <td>{{timeFormat .Time}}</td>
-                        <td>{{levelFormat .Level}}</td>
-                        <td><a href="?group={{.Group}}">{{.Group}}</a></td>
-                        <td>{{.Message}}</td>
-                        <td>{{shortValueFormat .Attrs}}</td>
-                        <tr> 
-                        </tr>
-                    </tr>
-                {{- else }}
-                    <tr class="summary">
-                        <td class="toggler">
-                            <div>▶</div>
-                        </td>
-                        <td>{{timeFormat .Time}}</td>
-                        <td>{{levelFormat .Level}}</td>
-                        <td><a href="?group={{.Group}}">{{.Group}}</a></td>
-                        <td>{{.Message}}</td>
-                        <td>{{shortValueFormat .Attrs}}</td>
-                    </tr>
-                    <tr class="content">
-                        <td></td>
-                        <td colspan="5">{{valueFormat .Attrs}}</td>
-                    </tr>
-                {{- end}}
+            {{ if eq (len .Attrs) 0 }}
+            <tr>
+                <td>
+                    <div></div>
+                </td>
+                <td>{{timeFormat .Time}}</td>
+                <td>{{levelFormat .Level}}</td>
+                <td><a href="?group={{.Group}}">{{.Group}}</a></td>
+                <td>{{.Message}}</td>
+                <td>{{shortValueFormat .Attrs}}</td>
+            <tr>
+            </tr>
+            </tr>
+            {{- else }}
+            <tr class="summary">
+                <td class="toggler">
+                    <div>▶</div>
+                </td>
+                <td>{{timeFormat .Time}}</td>
+                <td>{{levelFormat .Level}}</td>
+                <td><a href="?group={{.Group}}">{{.Group}}</a></td>
+                <td>{{.Message}}</td>
+                <td>{{shortValueFormat .Attrs}}</td>
+            </tr>
+            <tr class="content">
+                <td></td>
+                <td colspan="5">{{valueFormat .Attrs}}</td>
+            </tr>
+            {{- end}}
             {{- end}}
         </tbody>
     </table>
