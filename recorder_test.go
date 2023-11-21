@@ -12,7 +12,7 @@ func TestRecorder(t *testing.T) {
 }
 
 func TestGroupMarker(t *testing.T) {
-	rec := NewRecorder(WithGroupMarker("grp"))
+	rec := NewRecorder(WithGroupMarkers("grp"))
 	l := slog.New(NewLogHandler(rec, slog.Default().Handler(), slog.LevelDebug))
 
 	g := l.With("func", "TestGroupMarker")

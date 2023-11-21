@@ -57,7 +57,7 @@ func (h *SlogHandler) WithAttrs(attrs []slog.Attr) slog.Handler {
 	if len(attrs) == 0 {
 		return h
 	}
-	if v := findGroupMarkerValue(attrs, h.recorder.groupMarker); v != "" {
+	if v := findGroupMarkerValue(attrs, h.recorder.groupMarkers); v != "" {
 		gh := NewLogHandler(h.recorder, h.handler.WithAttrs(attrs), h.level)
 		gh.attrGroup = h.attrGroup
 		ng := v
@@ -86,10 +86,12 @@ func (h *SlogHandler) WithGroup(name string) slog.Handler {
 	return gh
 }
 
-func findGroupMarkerValue(attrs []slog.Attr, marker string) string {
-	for _, a := range attrs {
-		if a.Key == marker {
-			return a.Value.String()
+func findGroupMarkerValue(attrs []slog.Attr, markers []string) string {
+	for _, marker := range markers {
+		for _, a := range attrs {
+			if a.Key == marker {
+				return a.Value.String() // first come first serve
+			}
 		}
 	}
 	return ""

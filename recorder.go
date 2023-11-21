@@ -11,11 +11,11 @@ import (
 )
 
 type recorder struct {
-	mutex       sync.RWMutex
-	events      []Event
-	maxEvents   int
-	groupMarker string
-	stats       *recordingStats
+	mutex        sync.RWMutex
+	events       []Event
+	maxEvents    int
+	groupMarkers []string
+	stats        *recordingStats
 }
 
 type recordingStats struct {
@@ -31,18 +31,18 @@ func WithMaxEvents(maxEvents int) RecorderOption {
 	}
 }
 
-func WithGroupMarker(marker string) RecorderOption {
+func WithGroupMarkers(markers ...string) RecorderOption {
 	return func(r *recorder) {
-		r.groupMarker = marker
+		r.groupMarkers = markers
 	}
 }
 
 func NewRecorder(opts ...RecorderOption) *recorder {
 	r := &recorder{
-		mutex:       sync.RWMutex{},
-		events:      []Event{},
-		maxEvents:   100,
-		groupMarker: "func",
+		mutex:        sync.RWMutex{},
+		events:       []Event{},
+		maxEvents:    100,
+		groupMarkers: []string{"func"},
 		stats: &recordingStats{
 			Started: time.Now(),
 			Count:   0,

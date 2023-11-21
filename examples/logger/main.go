@@ -19,7 +19,7 @@ const eventGroupMarker = "httpHandleFunc"
 
 func main() {
 	// record max 100 events
-	rec := nanny.NewRecorder(nanny.WithMaxEvents(1000), nanny.WithGroupMarker(eventGroupMarker))
+	rec := nanny.NewRecorder(nanny.WithMaxEvents(1000), nanny.WithGroupMarkers(eventGroupMarker))
 
 	// fallback logger (cannot be the default handler)
 	txt := slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{Level: slog.LevelDebug})
