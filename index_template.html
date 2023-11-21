@@ -126,6 +126,15 @@
             transform: rotate(90deg)translate(0.2em, 0.1em);
         }
 
+        td.group:not(:empty) {
+            cursor: pointer;
+        }
+
+        td.group:hover {
+            text-decoration: underline;
+            color: blue;
+        }
+
         td,
         th {
             padding: 4px;
@@ -154,7 +163,7 @@
                 </td>
                 <td>{{timeFormat .Time}}</td>
                 <td>{{levelFormat .Level}}</td>
-                <td><a href="?group={{.Group}}">{{.Group}}</a></td>
+                <td class="group">{{.Group}}</td>
                 <td>{{.Message}}</td>
                 <td>{{shortValueFormat .Attrs}}</td>
             <tr>
@@ -167,7 +176,7 @@
                 </td>
                 <td>{{timeFormat .Time}}</td>
                 <td>{{levelFormat .Level}}</td>
-                <td><a href="?group={{.Group}}">{{.Group}}</a></td>
+                <td class="group">{{.Group}}</td>
                 <td>{{.Message}}</td>
                 <td>{{shortValueFormat .Attrs}}</td>
             </tr>
@@ -192,6 +201,17 @@
         summaryRows.forEach((each) => {
             each.querySelector("td:first-child").addEventListener("click", () => {
                 each.classList.toggle("with-content");
+            });
+        });
+
+        // Add click handler to group cells to show grouped items
+        summaryRows.forEach((each) => {
+            each.querySelector("td.group").addEventListener("click", (event) => {
+                const url = new URL(document.URL);
+                const searchParams = new URLSearchParams(url.search);
+                searchParams.set("group", event.target.textContent);
+                window.location = "?" + searchParams.toString();	// Will replace full query string aka search parameters
+                console.log("Going: " + searchParams.toString());
             });
         });
     </script>
