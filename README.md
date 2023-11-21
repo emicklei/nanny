@@ -1,6 +1,8 @@
 # nanny
 
-Recording log events with all attribute values to for remote inspection through HTTP.
+[![GoDoc](https://pkg.go.dev/badge/github.com/emicklei/nanny)](https://pkg.go.dev/github.com/emicklei/nanny)
+
+Records a sliding window of slog events with all attribute values for remote inspection through HTTP.
 
 
 ## usage
@@ -39,7 +41,7 @@ Events can be grouped e.g. by function name or for the processing of a specific 
 ```
 
 Here `func` is the default event group marker.
-You can change this value to whatever you want using the RecorderOption `WithGroupMarker`.
+You can change the group keys to whatever you want using the RecorderOption `WithGroupMarkers`.
 
 
 ## sample record served as JSON
