@@ -31,11 +31,18 @@ func NewBrowser(rec *recorder, opts ...BrowserOption) *Browser {
 func (b *Browser) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	r.ParseForm()
 	do := r.URL.Query().Get("do")
-	if "events" == do {
+	switch do {
+	case "events":
 		b.serveEvents(w, r)
-		return
+	case "stop":
+		b.recorder.stop()
+	case "flush":
+		b.recorder.flush()
+	case "resume":
+		b.recorder.resume()
+	default:
+		b.serveIndex(w, r)
 	}
-	b.serveIndex(w, r)
 }
 
 func (b *Browser) serveEvents(w http.ResponseWriter, r *http.Request) {
