@@ -22,6 +22,62 @@ func TestGroupMarker(t *testing.T) {
 	rec.Log()
 }
 
+func TestRecorderConditions(t *testing.T) {
+	rec := NewRecorder()
+	rec.Record(slog.LevelDebug, "grp", "hello world", map[string]any{
+		"grp": map[string]any{
+			"key": "value",
+		},
+		"shoe": 42,
+	})
+	ev1 := rec.events[0]
+	con1 := RecordCondition{
+		Name:    "level debug",
+		Enabled: true,
+		Path:    "level",
+		Value:   "debug",
+	}
+	if !con1.Matches(ev1) {
+		t.Errorf("condition %v did not match event %v", con1, ev1)
+	}
+	con2 := RecordCondition{
+		Name:    "message includes",
+		Enabled: true,
+		Path:    "message",
+		Value:   "*world*",
+	}
+	if !con2.Matches(ev1) {
+		t.Errorf("condition %v did not match event %v", con2, ev1)
+	}
+	con3 := RecordCondition{
+		Name:    "message exact",
+		Enabled: true,
+		Path:    "message",
+		Value:   "hello world",
+	}
+	if !con3.Matches(ev1) {
+		t.Errorf("condition %v did not match event %v", con2, ev1)
+	}
+	con4 := RecordCondition{
+		Name:    "attr int",
+		Enabled: true,
+		Path:    "attrs.shoe",
+		Value:   "42",
+	}
+	if !con4.Matches(ev1) {
+		t.Errorf("condition %v did not match event %v", con4, ev1)
+	}
+	con5 := RecordCondition{
+		Name:    "attr int",
+		Enabled: true,
+		Path:    "attrs.grp.key",
+		Value:   "value",
+	}
+	if !con5.Matches(ev1) {
+		t.Errorf("condition %v did not match event %v", con5, ev1)
+	}
+}
+
 func TestMaxEventGroups(t *testing.T) {
 	rec := NewRecorder()
 	rec.retentionStrategy = MaxEventGroupsStrategy{MaxEventGroups: 2}
