@@ -57,6 +57,9 @@ func NewRecorder(opts ...RecorderOption) *recorder {
 }
 
 func (r *recorder) Record(level slog.Level, group, message string, attrs map[string]any) {
+	if !r.isRecording {
+		return
+	}
 	ev := Event{
 		Time:    time.Now(),
 		Level:   level,
