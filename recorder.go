@@ -11,12 +11,13 @@ import (
 )
 
 type recorder struct {
-	mutex        sync.RWMutex
-	events       []Event
-	maxEvents    int
-	groupMarkers []string
-	stats        *recordingStats
-	isRecording  bool
+	mutex             sync.RWMutex
+	events            []Event
+	retentionStrategy RetentionStrategy
+	groupMarkers      []string
+	groupSet          map[string]bool
+	stats             *recordingStats
+  isRecording  bool
 }
 
 type recordingStats struct {
@@ -28,7 +29,13 @@ type RecorderOption func(*recorder)
 
 func WithMaxEvents(maxEvents int) RecorderOption {
 	return func(r *recorder) {
-		r.maxEvents = maxEvents
+		r.retentionStrategy = MaxEventsStrategy{MaxEvents: maxEvents}
+	}
+}
+
+func WithMaxEventGroups(maxGroups int) RecorderOption {
+	return func(r *recorder) {
+		r.retentionStrategy = MaxEventGroupsStrategy{MaxEventGroups: maxGroups}
 	}
 }
 
@@ -42,13 +49,14 @@ func NewRecorder(opts ...RecorderOption) *recorder {
 	r := &recorder{
 		mutex:        sync.RWMutex{},
 		events:       []Event{},
-		maxEvents:    100,
 		groupMarkers: []string{"func"},
+		groupSet:     map[string]bool{},
 		stats: &recordingStats{
 			Started: time.Now(),
 			Count:   0,
 		},
 		isRecording: true,
+		retentionStrategy: MaxEventsStrategy{MaxEvents: 100},
 	}
 	for _, opt := range opts {
 		opt(r)
@@ -71,10 +79,11 @@ func (r *recorder) Record(level slog.Level, group, message string, attrs map[str
 	defer r.mutex.Unlock()
 	r.events = append(r.events, ev)
 	r.stats.Count++
-	// remove old events
-	if len(r.events) > r.maxEvents {
-		r.events = r.events[1:]
+	if group != "" {
+		// update count cache
+		r.groupSet[group] = true
 	}
+	r.retentionStrategy.PostRecordedEventBy(r)
 }
 
 // Log outputs all events using the TextHandler
@@ -144,6 +153,34 @@ func (r *recorder) buildGroups() []eventGroup {
 		}
 	}
 	return groups
+}
+
+// pre: mutex lock is active
+func (r *recorder) removeOldestEventGroup() {
+	// first group detected is the oldest; events are ordered by time.
+	target := ""
+	for _, each := range r.events {
+		if each.Group == "" {
+			continue
+		}
+		target = each.Group
+		break
+	}
+	// any group?
+	if target == "" {
+		return
+	}
+	// remove events by copying
+	remaining := []Event{}
+	for _, each := range r.events {
+		if each.Group == target {
+			continue
+		}
+		remaining = append(remaining, each)
+	}
+	r.events = remaining
+	// update cached set
+	delete(r.groupSet, target)
 }
 
 func snapshotAttrs(attrs map[string]any) map[string]any {
