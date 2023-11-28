@@ -17,6 +17,7 @@ type recorder struct {
 	groupMarkers      []string
 	groupSet          map[string]bool
 	stats             *recordingStats
+  isRecording  bool
 }
 
 type recordingStats struct {
@@ -54,6 +55,7 @@ func NewRecorder(opts ...RecorderOption) *recorder {
 			Started: time.Now(),
 			Count:   0,
 		},
+		isRecording: true,
 		retentionStrategy: MaxEventsStrategy{MaxEvents: 100},
 	}
 	for _, opt := range opts {
@@ -63,6 +65,9 @@ func NewRecorder(opts ...RecorderOption) *recorder {
 }
 
 func (r *recorder) Record(level slog.Level, group, message string, attrs map[string]any) {
+	if !r.isRecording {
+		return
+	}
 	ev := Event{
 		Time:    time.Now(),
 		Level:   level,
@@ -104,6 +109,20 @@ func (r *recorder) Log() {
 			th.Handle(context.Background(), lr)
 		}
 	}
+}
+
+func (r *recorder) stop() {
+	r.isRecording = false
+}
+
+func (r *recorder) resume() {
+	r.isRecording = true
+}
+
+func (r *recorder) flush() {
+	r.mutex.Lock()
+	defer r.mutex.RLock()
+	r.events = []Event{}
 }
 
 type eventGroup struct {

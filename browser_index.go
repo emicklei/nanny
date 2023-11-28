@@ -39,12 +39,7 @@ func (b *Browser) serveIndex(w http.ResponseWriter, r *http.Request) {
 	}
 	fm := template.FuncMap{
 		"timeFormat": func(v any) string {
-			s := v.(time.Time).Format("2006-01-02 15:04:05.99")
-			// bug in sdk?
-			if len(s) != 22 {
-				s += "0"
-			}
-			return s
+			return v.(time.Time).Format("2006-01-02 15:04:05.000")
 		},
 		"valueFormat": func(v any) string {
 			d, _ := json.MarshalIndent(v, "", "  ")

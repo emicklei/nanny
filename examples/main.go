@@ -39,6 +39,9 @@ func main() {
 	slog.Info("to see events JSON, open", "url", "http://localhost:8080/nanny?do=events")
 	slog.Info("to see debug events, open", "url", "http://localhost:8080/nanny?level=debug")
 	slog.Info("to see group events, open", "url", "http://localhost:8080/nanny?group=1:do")
+	slog.Info("to stop recording, open", "url", "http://localhost:8080/nanny?do=stop")
+	slog.Info("to resume recording, open", "url", "http://localhost:8080/nanny?do=resume")
+	slog.Info("to flush recorded events, open", "url", "http://localhost:8080/nanny?do=flush")
 	http.ListenAndServe(":8080", http.DefaultServeMux)
 }
 
