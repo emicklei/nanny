@@ -2,6 +2,7 @@ package nanny
 
 import (
 	"fmt"
+	"log/slog"
 	"regexp"
 	"strconv"
 	"strings"
@@ -12,10 +13,36 @@ type RecordCondition struct {
 	Enabled bool
 	Path    string
 	Value   string
+	valueRe *regexp.Regexp
 }
 
 func (c RecordCondition) String() string {
 	return c.Name
+}
+
+func NewCondition(name string, enabled bool, path string, value string) RecordCondition {
+	rc := RecordCondition{
+		Name:    name,
+		Enabled: enabled,
+		Path:    path,
+		Value:   value,
+	}
+	rc = rc.withRegexp()
+	return rc
+}
+
+// withRegexp returns a copy with a cached Regexp when the values specifies one.
+func (r RecordCondition) withRegexp() RecordCondition {
+	if strings.HasPrefix(r.Value, "/") && strings.HasSuffix(r.Value, "/") {
+		expression := r.Value[1 : len(r.Value)-1]
+		re, err := regexp.Compile(expression)
+		if err != nil {
+			slog.Warn(fmt.Sprintf("invalid regexp %q", r.Value))
+			return r
+		}
+		r.valueRe = re
+	}
+	return r
 }
 
 // Matches returns true if the event matches the specification of this condition.
@@ -32,14 +59,8 @@ func (r RecordCondition) Matches(ev Event) bool {
 	case "level":
 		return strings.ToLower(ev.Level.String()) == strings.ToLower(r.Value)
 	case "message":
-		// is it a pattern?
-		if strings.Contains(r.Value, "*") {
-			// TODO cache this?
-			re, err := regexp.Compile(strings.ReplaceAll(r.Value, "*", ".*"))
-			if err != nil {
-				return false
-			}
-			return re.MatchString(ev.Message)
+		if r.valueRe != nil {
+			return r.valueRe.MatchString(ev.Message)
 		}
 		// exact
 		return ev.Message == r.Value
