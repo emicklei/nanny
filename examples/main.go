@@ -97,6 +97,6 @@ func err(w http.ResponseWriter, r *http.Request) {
 
 	lg.Info("info")
 	lg.Debug("debug")
-	lg.Log(r.Context(), nanny.LevelTrace, "trace")
+	nanny.Trace(lg, "trace")
 	lg.Error("error")
 }
