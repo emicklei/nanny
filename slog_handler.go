@@ -44,7 +44,7 @@ func (h *SlogHandler) Handle(ctx context.Context, rec slog.Record) error {
 				h.attrGroup: collect,
 			}
 		}
-		h.recorder.Record(rec.Level, h.group, rec.Message, collect)
+		h.recorder.Record(h.handler, rec.Level, h.group, rec.Message, collect)
 	}
 	if h.handler.Enabled(ctx, rec.Level) {
 		return h.handler.Handle(ctx, rec)

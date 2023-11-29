@@ -3,13 +3,22 @@ package nanny
 import (
 	"fmt"
 	"log/slog"
+	"os"
 	"testing"
 )
 
 func TestRecorder(t *testing.T) {
 	rec := NewRecorder()
-	rec.Record(slog.LevelDebug, "grp", "msg", nil)
+	rec.Record(slog.Default().Handler(), slog.LevelDebug, "grp", "msg", nil)
 	rec.Log()
+}
+
+func TestRecorderLogEventGroupOnError(t *testing.T) {
+	h := slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{})
+	rec := NewRecorder(WithLogEventGroupOnError(true))
+	rec.Record(h, slog.LevelDebug, "", "ungrouped msg", nil)
+	rec.Record(h, slog.LevelDebug, "grp", "msg", nil)
+	rec.Record(h, slog.LevelError, "grp", "bummer!", nil)
 }
 
 func TestGroupMarker(t *testing.T) {
@@ -24,7 +33,7 @@ func TestGroupMarker(t *testing.T) {
 
 func TestRecorderConditions(t *testing.T) {
 	rec := NewRecorder()
-	rec.Record(slog.LevelDebug, "grp", "hello world", map[string]any{
+	rec.Record(slog.Default().Handler(), slog.LevelDebug, "grp", "hello world", map[string]any{
 		"grp": map[string]any{
 			"key": "value",
 		},
@@ -83,7 +92,7 @@ func TestMaxEventGroups(t *testing.T) {
 	rec.retentionStrategy = MaxEventGroupsStrategy{MaxEventGroups: 2}
 	for i := 0; i < 5; i++ {
 		for j := 0; j < 5; j++ {
-			rec.Record(slog.LevelDebug, fmt.Sprintf("grp%d", i), fmt.Sprintf("msg%d", j), nil)
+			rec.Record(slog.Default().Handler(), slog.LevelDebug, fmt.Sprintf("grp%d", i), fmt.Sprintf("msg%d", j), nil)
 		}
 	}
 	if got, want := len(rec.groupSet), 2; got != want {

@@ -37,12 +37,18 @@ Events can be grouped e.g. by function name or for the processing of a specific 
 
 ```go
 	l := slog.Default().With("func", "myFunctionName")
-	l.Debug("var", "value")	
+	l.Debug("var", "key", "value")
 ```
 
 Here `func` is the default event group marker.
 You can change the group keys to whatever you want using the RecorderOption `WithGroupMarkers`.
 
+## log event group on error
+
+```go
+	r := nanny.NewRecorder(nanny.WithLogEventGroupOnError(true))
+	...
+```
 
 ## sample record served as JSON
 

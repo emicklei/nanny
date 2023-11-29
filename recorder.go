@@ -11,13 +11,14 @@ import (
 )
 
 type recorder struct {
-	mutex             sync.RWMutex
-	events            []Event
-	retentionStrategy RetentionStrategy
-	groupMarkers      []string
-	groupSet          map[string]bool
-	stats             *recordingStats
-  isRecording  bool
+	mutex                sync.RWMutex
+	events               []Event
+	retentionStrategy    RetentionStrategy
+	groupMarkers         []string
+	groupSet             map[string]bool
+	stats                *recordingStats
+	isRecording          bool
+	logEventGroupOnError bool
 }
 
 type recordingStats struct {
@@ -45,6 +46,12 @@ func WithGroupMarkers(markers ...string) RecorderOption {
 	}
 }
 
+func WithLogEventGroupOnError(enabled bool) RecorderOption {
+	return func(r *recorder) {
+		r.logEventGroupOnError = enabled
+	}
+}
+
 func NewRecorder(opts ...RecorderOption) *recorder {
 	r := &recorder{
 		mutex:        sync.RWMutex{},
@@ -55,8 +62,9 @@ func NewRecorder(opts ...RecorderOption) *recorder {
 			Started: time.Now(),
 			Count:   0,
 		},
-		isRecording: true,
-		retentionStrategy: MaxEventsStrategy{MaxEvents: 100},
+		isRecording:          true,
+		logEventGroupOnError: false,
+		retentionStrategy:    MaxEventsStrategy{MaxEvents: 100},
 	}
 	for _, opt := range opts {
 		opt(r)
@@ -64,7 +72,7 @@ func NewRecorder(opts ...RecorderOption) *recorder {
 	return r
 }
 
-func (r *recorder) Record(level slog.Level, group, message string, attrs map[string]any) {
+func (r *recorder) Record(fallback slog.Handler, level slog.Level, group, message string, attrs map[string]any) {
 	if !r.isRecording {
 		return
 	}
@@ -76,7 +84,6 @@ func (r *recorder) Record(level slog.Level, group, message string, attrs map[str
 		Attrs:   snapshotAttrs(attrs),
 	}
 	r.mutex.Lock()
-	defer r.mutex.Unlock()
 	r.events = append(r.events, ev)
 	r.stats.Count++
 	if group != "" {
@@ -84,6 +91,31 @@ func (r *recorder) Record(level slog.Level, group, message string, attrs map[str
 		r.groupSet[group] = true
 	}
 	r.retentionStrategy.PostRecordedEventBy(r)
+	r.mutex.Unlock()
+
+	if level >= slog.LevelError && r.logEventGroupOnError {
+		r.logEventGroup(fallback, group)
+	}
+}
+
+func (r *recorder) logEventGroup(handler slog.Handler, group string) {
+	r.mutex.RLock()
+	// make copy to new record calls are not blocked
+	list := make([]Event, len(r.events))
+	copy(list, r.events)
+	r.mutex.RUnlock()
+
+	for _, ev := range list {
+		if ev.Group != group {
+			continue
+		}
+		lr := slog.NewRecord(ev.Time, ev.Level, ev.Message, 0)
+		lr.AddAttrs(slog.Any("nanny.group", ev.Group))
+		for k, v := range ev.Attrs {
+			lr.AddAttrs(slog.Any(k, v))
+		}
+		handler.Handle(context.Background(), lr)
+	}
 }
 
 // Log outputs all events using the TextHandler
