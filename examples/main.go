@@ -19,16 +19,20 @@ const eventGroupMarker = "httpHandleFunc"
 
 func main() {
 	// record max 100 events
-	rec := nanny.NewRecorder(nanny.WithMaxEvents(1000), nanny.WithGroupMarkers(eventGroupMarker))
+	rec := nanny.NewRecorder(
+		nanny.WithLogEventGroupOnError(true),
+		nanny.WithMaxEventGroups(10),
+		nanny.WithGroupMarkers(eventGroupMarker))
 
 	// fallback logger (cannot be the default handler)
-	txt := slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{Level: slog.LevelDebug})
+	txt := slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{Level: slog.LevelInfo})
 
 	// handler capturing debug and up
-	slog.SetDefault(slog.New(nanny.NewLogHandler(rec, txt, slog.LevelDebug)))
+	slog.SetDefault(slog.New(nanny.NewLogHandler(rec, txt, nanny.LevelTrace)))
 
 	// serve do on /do
 	http.HandleFunc("/do", do)
+	http.HandleFunc("/err", err)
 
 	// serve captured events
 	http.Handle("/nanny", nanny.NewBrowser(rec, nanny.WithPageSize(100)))
@@ -42,6 +46,7 @@ func main() {
 	slog.Info("to stop recording, open", "url", "http://localhost:8080/nanny?do=stop")
 	slog.Info("to resume recording, open", "url", "http://localhost:8080/nanny?do=resume")
 	slog.Info("to flush recorded events, open", "url", "http://localhost:8080/nanny?do=flush")
+	slog.Info("to simulate log on error, open", "url", "http://localhost:8080/err")
 	http.ListenAndServe(":8080", http.DefaultServeMux)
 }
 
@@ -85,4 +90,13 @@ func internalDo(parentLogger *slog.Logger) {
 	// start event group
 	glog := parentLogger.With(eventGroupMarker, "internalDo")
 	glog.Info("do internal stuff")
+}
+
+func err(w http.ResponseWriter, r *http.Request) {
+	lg := slog.Default().With(eventGroupMarker, fmt.Sprintf("%d:err", newRequestID()))
+
+	lg.Info("info")
+	lg.Debug("debug")
+	lg.Log(r.Context(), nanny.LevelTrace, "trace")
+	lg.Error("error")
 }

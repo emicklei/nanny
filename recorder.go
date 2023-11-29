@@ -3,6 +3,7 @@ package nanny
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"log/slog"
 	"os"
 	"sort"
@@ -104,17 +105,21 @@ func (r *recorder) logEventGroup(handler slog.Handler, group string) {
 	list := make([]Event, len(r.events))
 	copy(list, r.events)
 	r.mutex.RUnlock()
-
+	ctx := context.Background()
 	for _, ev := range list {
 		if ev.Group != group {
 			continue
 		}
+		if handler.Enabled(ctx, ev.Level) {
+			// already logged
+			continue
+		}
 		lr := slog.NewRecord(ev.Time, ev.Level, ev.Message, 0)
-		lr.AddAttrs(slog.Any("nanny.group", ev.Group))
 		for k, v := range ev.Attrs {
 			lr.AddAttrs(slog.Any(k, v))
 		}
-		handler.Handle(context.Background(), lr)
+		fmt.Println(lr.Level)
+		handler.Handle(ctx, lr)
 	}
 }
 
@@ -132,9 +137,6 @@ func (r *recorder) Log() {
 	for _, eg := range r.buildGroups() {
 		for _, ev := range eg.events {
 			lr := slog.NewRecord(ev.Time, ev.Level, ev.Message, 0)
-			if ev.Group != "" {
-				lr.AddAttrs(slog.Any("nanny.group", ev.Group))
-			}
 			for k, v := range ev.Attrs {
 				lr.AddAttrs(slog.Any(k, v))
 			}
