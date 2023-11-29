@@ -3,7 +3,6 @@ package nanny
 import (
 	"context"
 	"encoding/json"
-	"fmt"
 	"log/slog"
 	"os"
 	"sort"
@@ -101,7 +100,7 @@ func (r *recorder) Record(fallback slog.Handler, level slog.Level, group, messag
 
 func (r *recorder) logEventGroup(handler slog.Handler, group string) {
 	r.mutex.RLock()
-	// make copy to new record calls are not blocked
+	// make copy to new so record calls are not blocked
 	list := make([]Event, len(r.events))
 	copy(list, r.events)
 	r.mutex.RUnlock()
@@ -118,7 +117,6 @@ func (r *recorder) logEventGroup(handler slog.Handler, group string) {
 		for k, v := range ev.Attrs {
 			lr.AddAttrs(slog.Any(k, v))
 		}
-		fmt.Println(lr.Level)
 		handler.Handle(ctx, lr)
 	}
 }
