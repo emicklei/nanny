@@ -5,22 +5,22 @@ type RetentionStrategy interface {
 	PostRecordedEventBy(*recorder)
 }
 
-type MaxEventsStrategy struct {
-	MaxEvents int
+type maxEventsStrategy struct {
+	maxEvents int
 }
 
-func (s MaxEventsStrategy) PostRecordedEventBy(r *recorder) {
-	if len(r.events) > s.MaxEvents {
+func (s maxEventsStrategy) PostRecordedEventBy(r *recorder) {
+	if len(r.events) > s.maxEvents {
 		r.events = r.events[1:]
 	}
 }
 
-type MaxEventGroupsStrategy struct {
-	MaxEventGroups int
+type maxEventGroupsStrategy struct {
+	maxEventGroups int
 }
 
-func (s MaxEventGroupsStrategy) PostRecordedEventBy(r *recorder) {
-	if len(r.groupSet) > s.MaxEventGroups {
+func (s maxEventGroupsStrategy) PostRecordedEventBy(r *recorder) {
+	if len(r.groupSet) > s.maxEventGroups {
 		r.removeOldestEventGroup()
 	}
 }
