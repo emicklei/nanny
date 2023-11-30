@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"log/slog"
 	"os"
-	"sort"
 	"sync"
 	"time"
 )
@@ -30,13 +29,13 @@ type RecorderOption func(*recorder)
 
 func WithMaxEvents(maxEvents int) RecorderOption {
 	return func(r *recorder) {
-		r.retentionStrategy = MaxEventsStrategy{MaxEvents: maxEvents}
+		r.retentionStrategy = maxEventsStrategy{maxEvents: maxEvents}
 	}
 }
 
 func WithMaxEventGroups(maxGroups int) RecorderOption {
 	return func(r *recorder) {
-		r.retentionStrategy = MaxEventGroupsStrategy{MaxEventGroups: maxGroups}
+		r.retentionStrategy = maxEventGroupsStrategy{maxEventGroups: maxGroups}
 	}
 }
 
@@ -64,7 +63,7 @@ func NewRecorder(opts ...RecorderOption) *recorder {
 		},
 		isRecording:          true,
 		logEventGroupOnError: false,
-		retentionStrategy:    MaxEventsStrategy{MaxEvents: 100},
+		retentionStrategy:    maxEventsStrategy{maxEvents: 100},
 	}
 	for _, opt := range opts {
 		opt(r)
@@ -100,7 +99,7 @@ func (r *recorder) Record(fallback slog.Handler, level slog.Level, group, messag
 
 func (r *recorder) logEventGroup(handler slog.Handler, group string) {
 	r.mutex.RLock()
-	// make copy to new so record calls are not blocked
+	// make copy so new Record calls are not blocked
 	list := make([]Event, len(r.events))
 	copy(list, r.events)
 	r.mutex.RUnlock()
@@ -125,11 +124,9 @@ func (r *recorder) logEventGroup(handler slog.Handler, group string) {
 func (r *recorder) Log() {
 	r.mutex.RLock()
 	defer r.mutex.RUnlock()
+	// make copy so new Record calls are not blocked
 	list := make([]Event, len(r.events))
 	copy(list, r.events)
-	sort.Slice(list, func(i, j int) bool {
-		return list[i].Time.Before(list[j].Time)
-	})
 	// do not use default handler because that could be a recording one
 	th := slog.NewTextHandler(os.Stdout, nil)
 	for _, eg := range r.buildGroups() {
@@ -153,7 +150,13 @@ func (r *recorder) resume() {
 
 func (r *recorder) flush() {
 	r.mutex.Lock()
-	defer r.mutex.RLock()
+	defer r.mutex.Unlock()
+	r.events = []Event{}
+}
+
+func (r *recorder) clear() {
+	r.mutex.Lock()
+	defer r.mutex.Unlock()
 	r.events = []Event{}
 }
 
@@ -163,9 +166,8 @@ type eventGroup struct {
 }
 
 // order of events in group are preserved, groups are also in order
+// Pre: mutex has read lock
 func (r *recorder) buildGroups() []eventGroup {
-	r.mutex.RLock()
-	defer r.mutex.RUnlock()
 	groups := []eventGroup{{}} // for the no group
 	for _, each := range r.events {
 		// lookup group

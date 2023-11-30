@@ -13,6 +13,17 @@ func TestRecorder(t *testing.T) {
 	rec.Log()
 }
 
+func TestRecorderStopResumeFlush(t *testing.T) {
+	rec := NewRecorder()
+	rec.Record(slog.Default().Handler(), slog.LevelDebug, "grp", "msg", nil)
+	rec.stop()
+	rec.flush()
+	rec.resume()
+	if got, want := len(rec.events), 0; got != want {
+		t.Errorf("got [%v]:%T want [%v]:%T", got, got, want, want)
+	}
+}
+
 func TestRecorderLogEventGroupOnError(t *testing.T) {
 	h := slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{})
 	rec := NewRecorder(WithLogEventGroupOnError(true))
@@ -89,7 +100,7 @@ func TestRecorderConditions(t *testing.T) {
 
 func TestMaxEventGroups(t *testing.T) {
 	rec := NewRecorder()
-	rec.retentionStrategy = MaxEventGroupsStrategy{MaxEventGroups: 2}
+	rec.retentionStrategy = maxEventGroupsStrategy{maxEventGroups: 2}
 	for i := 0; i < 5; i++ {
 		for j := 0; j < 5; j++ {
 			rec.Record(slog.Default().Handler(), slog.LevelDebug, fmt.Sprintf("grp%d", i), fmt.Sprintf("msg%d", j), nil)
