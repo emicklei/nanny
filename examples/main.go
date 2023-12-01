@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"io"
 	"log/slog"
+	"math"
 	"net/http"
 	"os"
 	"sync/atomic"
@@ -90,6 +91,11 @@ func internalDo(parentLogger *slog.Logger) {
 	// start event group
 	glog := parentLogger.With(eventGroupMarker, "internalDo")
 	glog.Info("do internal stuff")
+	glog.Info(`
+	Lorem ipsum is a placeholder text commonly used.
+	`, "content", `
+	“Crocubot. So, you’re a cold, unfeeling reptile and also an equally cold, and unfeeling machine? Yes. So your origin is what? You fell in a vat of redundancy?”
+	`, "pi", math.Pi, "sqrte", math.SqrtE, "ln2", math.Ln2)
 }
 
 func err(w http.ResponseWriter, r *http.Request) {

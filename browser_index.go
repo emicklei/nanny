@@ -46,13 +46,19 @@ func (b *Browser) serveIndex(w http.ResponseWriter, r *http.Request) {
 			return string(d)
 		},
 		"shortValueFormat": shortValueFormat,
-		"levelFormat": func(v any) string {
+		"levelFormat": func(v any) template.HTML {
 			switch v.(type) {
 			case slog.Level:
 				if v.(slog.Level) == LevelTrace {
 					return "trace"
 				}
-				return strings.ToLower(v.(slog.Level).String())
+				l := v.(slog.Level)
+				switch l {
+				case slog.LevelDebug:
+					return "debug"
+				default:
+					return template.HTML(strings.ToLower(v.(slog.Level).String()))
+				}
 			default:
 				return "note"
 			}
