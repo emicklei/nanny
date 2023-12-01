@@ -130,9 +130,11 @@
             cursor: pointer;
         }
 
-        td.group:hover {
+        a.link,
+        td.link:hover {
             text-decoration: underline;
             color: blue;
+            cursor: pointer;
         }
 
         td,
@@ -156,27 +158,19 @@
         </thead>
         <tbody>
             {{- range .Events}}
-            {{ if eq (len .Attrs) 0 }}
-            <tr>
+            <tr class="summary">
+                {{ if eq (len .Attrs) 0 }}
                 <td>
                     <div></div>
                 </td>
-                <td>{{timeFormat .Time}}</td>
-                <td>{{levelFormat .Level}}</td>
-                <td class="group">{{.Group}}</td>
-                <td>{{.Message}}</td>
-                <td>{{shortValueFormat .Attrs}}</td>
-            <tr>
-            </tr>
-            </tr>
-            {{- else }}
-            <tr class="summary">
+                {{- else }}
                 <td class="toggler">
                     <div>▶</div>
                 </td>
+                {{- end}}
                 <td>{{timeFormat .Time}}</td>
-                <td>{{levelFormat .Level}}</td>
-                <td class="group">{{.Group}}</td>
+                <td class="level link">{{levelFormat .Level}}</td>
+                <td class="group link">{{.Group}}</td>
                 <td>{{.Message}}</td>
                 <td>{{shortValueFormat .Attrs}}</td>
             </tr>
@@ -185,35 +179,62 @@
                 <td colspan="5">{{valueFormat .Attrs}}</td>
             </tr>
             {{- end}}
-            {{- end}}
         </tbody>
     </table>
     <p>
-        Watched: {{.EventsSeen}} since: {{timeFormat .Since}} <a href="?">Reset filter</a>
+        Watched: {{.EventsSeen}} since: {{timeFormat .Since}} <a id="reset-link" class="link">Reset filter</a>
     </p>
     <script>
-        // Extract summary and content rows separately
-        let summaryRows = document.querySelectorAll("tr.summary");
-        let contentRows = document.querySelectorAll("tr.content");
+        const filterNames = [ "level", "group" ];
 
-        // Add click handler to value cells to toggle showing the (JSON) value on separate row.
-        // A class "with-content" is added to the summary row to indicate the content row should be shown.
-        summaryRows.forEach((each) => {
-            each.querySelector("td:first-child").addEventListener("click", () => {
-                each.classList.toggle("with-content");
+        // Add click handler to filter cells to filter on their respective values.
+        filterNames.forEach((filterName) => {
+            document.querySelectorAll("tr.summary td." + filterName).forEach((each) => {
+                each.addEventListener("click", (event) => {
+                    setFilterParam(filterName, event.target.textContent);
+                });
             });
         });
 
-        // Add click handler to group cells to show grouped items
-        summaryRows.forEach((each) => {
-            each.querySelector("td.group").addEventListener("click", (event) => {
-                const url = new URL(document.URL);
-                const searchParams = new URLSearchParams(url.search);
-                searchParams.set("group", event.target.textContent);
-                window.location = "?" + searchParams.toString();	// Will replace full query string aka search parameters
-                console.log("Going: " + searchParams.toString());
+        // Add click handler to toggle showing the (JSON) value on separate row.
+        document.querySelectorAll("tr.summary td.toggler").forEach((each) => {
+            each.addEventListener("click", () => {
+                // Add class "with-content" to the summary row (i.e. parent of cell)
+                // to indicate the adjacent content row should be shown.
+                each.parentElement.classList.toggle("with-content");
             });
         });
+
+        // Add click handler to reset link
+        const resetLink = document.getElementById("reset-link");
+        resetLink.addEventListener("click", () => {
+            resetFilterParams();
+        });
+
+        // Set the specified filter parameter to the specified value
+        function setFilterParam(key, value) {
+            updateFilterParams([ { key: key, value: value } ], []);
+        }
+
+        // Reset all filter parameters
+        function resetFilterParams() {
+            // Remove all known filter parameters
+            updateFilterParams([], filterNames);
+        }
+
+        // Update filter parameters.
+        // After calling this method, the application will update because a new URL is set.
+        function updateFilterParams(add, remove) {
+            const url = new URL(window.location);
+            const searchParams = new URLSearchParams(url.search);
+            add.forEach((filterParam) => {
+                searchParams.set(filterParam.key, filterParam.value);
+            });
+            remove.forEach((filterName) => {
+                searchParams.delete(filterName);
+            });
+            window.location = "?" + searchParams.toString();    // Will replace full query string aka search parameters
+        }
     </script>
 </body>
 
