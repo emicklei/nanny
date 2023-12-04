@@ -57,21 +57,28 @@ func (h *SlogHandler) WithAttrs(attrs []slog.Attr) slog.Handler {
 	if len(attrs) == 0 {
 		return h
 	}
-	if v := findGroupMarkerValue(attrs, h.recorder.groupMarkers); v != "" {
-		gh := NewLogHandler(h.recorder, h.handler.WithAttrs(attrs), h.level)
-		gh.attrGroup = h.attrGroup
-		ng := v
-		if h.group == "" {
-			gh.group = ng
-		} else {
-			gh.group = h.group + "/" + ng
+	// check for groupin request
+	// no nesting of groups because of potential multiple markers
+	if h.group == "" {
+		if m, v := findGroupMarkerAndValue(attrs, h.recorder.groupMarkers); v != "" {
+			gh := NewLogHandler(h.recorder, h.handler.WithAttrs(attrs), h.level)
+			gh.attrGroup = h.attrGroup
+			copyAttrs := make([]slog.Attr, 0, len(attrs)+len(h.attrs))
+			copyAttrs = append(copyAttrs, h.attrs...)
+			for _, a := range attrs {
+				if a.Key != m {
+					copyAttrs = append(copyAttrs, a)
+				}
+			}
+			gh.attrs = copyAttrs
+			gh.group = v
+			return gh
 		}
-		return gh
 	}
 	ah := NewLogHandler(h.recorder, h.handler.WithAttrs(attrs), h.level)
 	ah.group = h.group
 	ah.attrGroup = h.attrGroup
-	ah.attrs = attrs
+	ah.attrs = append(h.attrs, attrs...)
 	return ah
 }
 
@@ -86,13 +93,13 @@ func (h *SlogHandler) WithGroup(name string) slog.Handler {
 	return gh
 }
 
-func findGroupMarkerValue(attrs []slog.Attr, markers []string) string {
+func findGroupMarkerAndValue(attrs []slog.Attr, markers []string) (string, string) {
 	for _, marker := range markers {
 		for _, a := range attrs {
 			if a.Key == marker {
-				return a.Value.String() // first come first serve
+				return marker, a.Value.String() // first come first serve
 			}
 		}
 	}
-	return ""
+	return "", ""
 }
