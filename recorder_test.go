@@ -100,7 +100,7 @@ func TestRecorderConditions(t *testing.T) {
 
 func TestMaxEventGroups(t *testing.T) {
 	rec := NewRecorder()
-	rec.retentionStrategy = maxEventGroupsStrategy{maxEventGroups: 2}
+	rec.retentionStrategy = maxEventGroupsStrategy{maxEventGroups: 2, maxEvents: 1000}
 	for i := 0; i < 5; i++ {
 		for j := 0; j < 5; j++ {
 			rec.Record(slog.Default().Handler(), slog.LevelDebug, fmt.Sprintf("grp%d", i), fmt.Sprintf("msg%d", j), nil)
