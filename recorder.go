@@ -29,13 +29,23 @@ type RecorderOption func(*recorder)
 
 func WithMaxEvents(maxEvents int) RecorderOption {
 	return func(r *recorder) {
+		if r.retentionStrategy != nil {
+			if rs, ok := r.retentionStrategy.(maxEventGroupsStrategy); ok {
+				rs.maxEvents = maxEvents
+				r.retentionStrategy = rs
+				return
+			}
+		}
 		r.retentionStrategy = maxEventsStrategy{maxEvents: maxEvents}
 	}
 }
 
 func WithMaxEventGroups(maxGroups int) RecorderOption {
 	return func(r *recorder) {
-		r.retentionStrategy = maxEventGroupsStrategy{maxEventGroups: maxGroups}
+		r.retentionStrategy = maxEventGroupsStrategy{
+			maxEventGroups: maxGroups,
+			maxEvents:      1000,
+		}
 	}
 }
 
