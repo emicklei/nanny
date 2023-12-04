@@ -1,6 +1,9 @@
 package nanny
 
-import "net/http"
+import (
+	"log/slog"
+	"net/http"
+)
 
 // BasicAuthHandler is a http.Handler that requires basic authentication.
 // 95% Suggested by Google Duet
@@ -19,6 +22,12 @@ func NewBasicAuthHandler(handler http.Handler, username, password string) *Basic
 }
 
 func (h *BasicAuthHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	// was it configured correctly?
+	if h.Username == "" || h.Password == "" {
+		slog.Warn("nanny.BasicAuthHandler is not configured correctly (missing username or password)")
+		h.Handler.ServeHTTP(w, r)
+		return
+	}
 	user, pass, ok := r.BasicAuth()
 	if !ok || user != h.Username || pass != h.Password {
 		w.Header().Set("WWW-Authenticate", `Basic realm="Restricted"`)
