@@ -7,6 +7,7 @@ import (
 	"io"
 	"log/slog"
 	"net/http"
+	"os"
 	"reflect"
 	"sort"
 	"strconv"
@@ -34,6 +35,18 @@ type eventFilter struct {
 	group  string
 	offset int
 	count  int
+}
+
+func (b *Browser) serveStaticIndex(w http.ResponseWriter, r *http.Request) {
+	content, err := os.ReadFile("index.html")
+	if err != nil {
+		w.WriteHeader(500)
+		io.WriteString(w, err.Error())
+		return
+	}
+
+	w.Header().Set("Content-Type", indexHTMLContentType)
+	w.Write(content)
 }
 
 func (b *Browser) serveIndex(w http.ResponseWriter, r *http.Request) {

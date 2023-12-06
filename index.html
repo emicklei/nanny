@@ -1,0 +1,318 @@
+<html>
+
+<head>
+    <title>Nanny</title>
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: "Open Sans", Tahoma, Geneva, sans-serif;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+
+		defs {
+			display: none;
+		}
+
+        table {
+            border-spacing: 0;
+        }
+
+        /*
+            Header row is dark gray with white text.
+        */
+        thead tr {
+            background-color: #c7c5c5;
+            color: #ffffff;
+        }
+
+        th {
+            text-align: left;
+            font-weight: normal;
+        }
+
+        /*
+           Header has rounded border on top.
+        */
+        th:first-child {
+            border-top-left-radius: 4px;
+        }
+
+        th:last-child {
+            border-top-right-radius: 4px;
+        }
+
+        /*
+           All secondary logical rows are gray.
+           Since we have 2 physical rows per logical row, use '4n + 1'
+           and '4n + 2' instead of '2n + 1'.
+         */
+        tbody tr:nth-child(4n + 1) {
+            background-color: #e4e4e4;
+        }
+
+        tbody tr:nth-child(4n + 2) {
+            background-color: #e4e4e4;
+        }
+
+        /*
+           All gray rows have a rounded border.
+        */
+        tbody tr:nth-child(4n + 1) td:first-child {
+            border-top-left-radius: 4px;
+            border-bottom-left-radius: 4px;
+        }
+
+        tbody tr:nth-child(4n + 1) td:last-child {
+            border-top-right-radius: 4px;
+            border-bottom-right-radius: 4px;
+        }
+
+        /*
+           Except for top row, which is attached to the header row
+           and does not have a rounded top border.
+        */
+        tbody tr:first-child td:first-child {
+            border-top-left-radius: 0;
+        }
+
+        tbody tr:first-child td:last-child {
+            border-top-right-radius: 0;
+        }
+
+        /*
+           All content rows (showing JSON) have a rounded bottom border.
+        */
+        tbody tr:nth-child(4n + 2) td:first-child {
+            border-bottom-left-radius: 4px;
+        }
+
+        tbody tr:nth-child(4n + 2) td:last-child {
+            border-bottom-right-radius: 4px;
+        }
+
+        /*
+           If content row is shown, remove rounded bottom border from
+           summary row, because content (JSON) is attached to this summary row.
+        */
+        tr.summary.with-content td:first-child {
+            border-bottom-left-radius: 0;
+        }
+
+        tr.summary.with-content td:last-child {
+            border-bottom-right-radius: 0;
+        }
+
+        /*
+           Hide content row if not requested to show it.
+        */
+        tr.summary:not(.with-content)+tr.content {
+            display: none;
+        }
+
+        tr.content td {
+            white-space: pre;
+            padding-bottom: 1em;
+        }
+
+        td.toggler div {
+            width: 1em;
+            height: 1em;
+            cursor: pointer;
+            transform: rotate(0deg);
+            transition: transform .5s ease 0s;
+        }
+
+        tr.with-content td.toggler div {
+            transform: rotate(90deg)translate(0.2em, 0.1em);
+        }
+
+		tr.summary td {
+			white-space: nowrap;
+		}
+
+        td.group:not(:empty) {
+            cursor: pointer;
+        }
+
+        a.link,
+        td.link:hover {
+            text-decoration: underline;
+            color: blue;
+            cursor: pointer;
+        }
+
+        td,
+        th {
+            padding: 4px;
+        }
+    </style>
+</head>
+
+<body>
+	<defs>
+			<table>
+				<tr class="summary">
+					<td class="toggler">
+						<div>▶</div>
+					</td>
+					<td data-field="t"></td>
+					<td data-field="l" class="level link"></td>
+					<td data-field="g" class="group link"></td>
+					<td data-field="m"></td>
+					<td data-field="a"></td>
+				</tr>
+				<tr class="content">
+					<td></td>
+					<td colspan="5">{{valueFormat .Attrs}}</td>
+				</tr>
+			</table>
+	</defs>
+    <table class="sortable">
+        <thead>
+            <tr>
+                <th>&nbsp;</th>
+                <th>Time</th>
+                <th>Level</th>
+                <th>Group</th>
+                <th>Message</th>
+                <th>Attributes</th>
+            </tr>
+        </thead>
+        <tbody class="events"></tbody>
+    </table>
+    <p>
+        Watched: {{.EventsSeen}} since: {{timeFormat .Since}}
+        <a id="reset-link" class="link">Reset filter</a>
+        <a href="?offset={{.OffsetPrevious}}">Previous Page</a>
+        <a href="?offset={{.OffsetNext}}">Next Page</a>
+    </p>
+    <script>
+		const fieldFormatters = {
+			t: (value) => { return value; },
+			l: (value) => { return value; },
+			g: (value) => { return value; },
+			m: (value) => { return value; },
+			a: (value) => { return JSON.stringify(value); }
+		};
+        const filterNames = ["level", "group"];
+
+		// Load events from nanny
+		function loadData(callback) {
+            const url = new URL(window.location);
+			url.searchParams.set("do", "events");
+            fetch(url)
+				.then((response) => {
+					if(!response.ok) {
+						throw new Error("Failed to load event data");
+					}
+					return response.json();
+				})
+				.then((data) => {
+					callback(data);
+				})
+			;
+		}
+
+		// Update table with new events
+		function updateData(data) {
+			console.log(data);
+
+			// Retrieve template rows
+			const summaryRow = document.querySelector("defs .summary");
+			const contentRow = document.querySelector("defs .content");
+
+			// Collect fields from the summary row
+			const fields = [];
+			summaryRow.querySelectorAll("[data-field]").forEach((cell, index) => {
+				fields[index] = cell.getAttribute("data-field");
+			});
+
+			// Create rows in the table for each event
+			const table = document.querySelector("tbody.events");
+			data.forEach((event) => {
+
+				// Create a new row
+				const newRow = summaryRow.cloneNode(true);	// Deep clone copy
+
+				// Copy content into the row
+				const cells = newRow.children;
+				fields.forEach((field, index) => {
+					// First cell is toggler, so start at 1
+					cells[index + 1].textContent = fieldFormatters[field](event[field]);
+				});
+
+				// Append the row to the table
+				table.appendChild(newRow);
+			});
+		}
+
+		// Add event listeners
+		function addEventListeners() {
+
+			// Add click handler to filter cells to filter on their respective values.
+			filterNames.forEach((filterName) => {
+				document.querySelectorAll("tr.summary td." + filterName).forEach((each) => {
+					each.addEventListener("click", (event) => {
+						setFilterParam(filterName, event.target.textContent);
+					});
+				});
+			});
+
+			// Add click handler to toggle showing the (JSON) value on separate row.
+			document.querySelectorAll("tr.summary td.toggler").forEach((each) => {
+				each.addEventListener("click", () => {
+					// Add class "with-content" to the summary row (i.e. parent of cell)
+					// to indicate the adjacent content row should be shown.
+					each.parentElement.classList.toggle("with-content");
+				});
+			});
+
+			// Add click handler to reset link
+			const resetLink = document.getElementById("reset-link");
+			resetLink.addEventListener("click", () => {
+				resetFilterParams();
+			});
+		}
+
+        // Set the specified filter parameter to the specified value
+        function setFilterParam(key, value) {
+            updateFilterParams([{ key: key, value: value }], []);
+        }
+
+        // Reset all filter parameters
+        function resetFilterParams() {
+            // Remove all known filter parameters
+            updateFilterParams([], filterNames);
+        }
+
+        // Update filter parameters.
+        // After calling this method, the application will update because a new URL is set.
+        function updateFilterParams(add, remove) {
+            const url = new URL(window.location);
+            const searchParams = new URLSearchParams(url.search);
+            add.forEach((filterParam) => {
+                searchParams.set(filterParam.key, filterParam.value);
+            });
+            remove.forEach((filterName) => {
+                searchParams.delete(filterName);
+            });
+            window.location = "?" + searchParams.toString();    // Will replace full query string aka search parameters
+        }
+
+		// All is setup, start loading data
+		loadData((data) => {
+
+			// Update data once received
+			updateData(data);
+
+			// Add interaction to page
+			addEventListeners();
+		})
+    </script>
+</body>
+
+</html>

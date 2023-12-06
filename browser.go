@@ -40,6 +40,8 @@ func (b *Browser) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		b.recorder.flush()
 	case "resume":
 		b.recorder.resume()
+	case "html":
+		b.serveStaticIndex(w, r)
 	default:
 		b.serveIndex(w, r)
 	}
