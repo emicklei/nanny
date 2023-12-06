@@ -182,10 +182,13 @@
         </tbody>
     </table>
     <p>
-        Watched: {{.EventsSeen}} since: {{timeFormat .Since}} <a id="reset-link" class="link">Reset filter</a>
+        Watched: {{.EventsSeen}} since: {{timeFormat .Since}}
+        <a id="reset-link" class="link">Reset filter</a>
+        <a href="?offset={{.OffsetPrevious}}">Previous Page</a>
+        <a href="?offset={{.OffsetNext}}">Next Page</a>
     </p>
     <script>
-        const filterNames = [ "level", "group" ];
+        const filterNames = ["level", "group"];
 
         // Add click handler to filter cells to filter on their respective values.
         filterNames.forEach((filterName) => {
@@ -213,7 +216,7 @@
 
         // Set the specified filter parameter to the specified value
         function setFilterParam(key, value) {
-            updateFilterParams([ { key: key, value: value } ], []);
+            updateFilterParams([{ key: key, value: value }], []);
         }
 
         // Reset all filter parameters

@@ -132,14 +132,11 @@ func (r *recorder) logEventGroup(handler slog.Handler, group string) {
 
 // Log outputs all events using the TextHandler
 func (r *recorder) Log() {
-	r.mutex.RLock()
-	defer r.mutex.RUnlock()
 	// make copy so new Record calls are not blocked
-	list := make([]Event, len(r.events))
-	copy(list, r.events)
+	list := r.snapshotEvents()
 	// do not use default handler because that could be a recording one
 	th := slog.NewTextHandler(os.Stdout, nil)
-	for _, eg := range r.buildGroups() {
+	for _, eg := range r.buildGroups(list) {
 		for _, ev := range eg.events {
 			lr := slog.NewRecord(ev.Time, ev.Level, ev.Message, 0)
 			for k, v := range ev.Attrs {
@@ -148,6 +145,14 @@ func (r *recorder) Log() {
 			th.Handle(context.Background(), lr)
 		}
 	}
+}
+
+func (r *recorder) snapshotEvents() []Event {
+	r.mutex.RLock()
+	defer r.mutex.RUnlock()
+	list := make([]Event, len(r.events))
+	copy(list, r.events)
+	return list
 }
 
 func (r *recorder) stop() {
@@ -177,9 +182,9 @@ type eventGroup struct {
 
 // order of events in group are preserved, groups are also in order
 // Pre: mutex has read lock
-func (r *recorder) buildGroups() []eventGroup {
+func (r *recorder) buildGroups(list []Event) []eventGroup {
 	groups := []eventGroup{{}} // for the no group
-	for _, each := range r.events {
+	for _, each := range list {
 		// lookup group
 		found := false
 		for g, other := range groups {

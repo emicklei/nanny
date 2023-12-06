@@ -36,7 +36,7 @@ func main() {
 	http.HandleFunc("/err", err)
 
 	// serve captured events
-	http.Handle("/nanny", nanny.NewBrowser(rec, nanny.WithPageSize(100)))
+	http.Handle("/nanny", nanny.NewBrowser(rec, nanny.WithPageSize(10)))
 
 	// serve
 	slog.Info("to create events, open", "url", "http://localhost:8080/do", "port", 8080)

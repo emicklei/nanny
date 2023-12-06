@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"reflect"
 	"sort"
+	"strconv"
 	"strings"
 	"time"
 
@@ -21,21 +22,44 @@ var indexHTML string
 const indexHTMLContentType = "text/html; charset=utf-8"
 
 type templateData struct {
-	Events     []Event
-	EventsSeen int64
-	Since      time.Time
+	Events         []Event
+	EventsSeen     int64
+	Since          time.Time
+	OffsetPrevious int
+	OffsetNext     int
 }
 
 type eventFilter struct {
-	level string
-	group string
+	level  string
+	group  string
+	offset int
+	count  int
 }
 
 func (b *Browser) serveIndex(w http.ResponseWriter, r *http.Request) {
-	r.ParseForm()
+	list := b.recorder.snapshotEvents()
 	filter := eventFilter{
 		level: r.Form.Get("level"),
 		group: r.Form.Get("group"),
+	}
+	if count := r.Form.Get("count"); count != "" {
+		filter.count, _ = strconv.Atoi(count)
+	} else {
+		// fallback to browser option
+		filter.count = b.pageSize
+	}
+	if offset := r.Form.Get("offset"); offset != "" {
+		filter.offset, _ = strconv.Atoi(offset)
+	} else {
+		// last page first
+		filter.offset = len(list) - filter.count
+	}
+	// make sure offset is in range
+	if filter.offset < 0 {
+		filter.offset = 0
+	}
+	if filter.offset > len(list) {
+		filter.offset = len(list)
 	}
 	fm := template.FuncMap{
 		"timeFormat": func(v any) string {
@@ -46,7 +70,7 @@ func (b *Browser) serveIndex(w http.ResponseWriter, r *http.Request) {
 			return string(d)
 		},
 		"shortValueFormat": shortValueFormat,
-		"levelFormat": func(v any) template.HTML {
+		"levelFormat": func(v any) string {
 			switch v.(type) {
 			case slog.Level:
 				if v.(slog.Level) == LevelTrace {
@@ -57,7 +81,7 @@ func (b *Browser) serveIndex(w http.ResponseWriter, r *http.Request) {
 				case slog.LevelDebug:
 					return "debug"
 				default:
-					return template.HTML(strings.ToLower(v.(slog.Level).String()))
+					return strings.ToLower(v.(slog.Level).String())
 				}
 			default:
 				return "note"
@@ -74,9 +98,11 @@ func (b *Browser) serveIndex(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	tmplData := templateData{
-		Events:     filtered(b.recorder.events, filter),
-		EventsSeen: b.recorder.stats.Count,
-		Since:      b.recorder.stats.Started,
+		Events:         filtered(list, filter),
+		EventsSeen:     b.recorder.stats.Count,
+		Since:          b.recorder.stats.Started,
+		OffsetPrevious: filter.offset - filter.count,
+		OffsetNext:     filter.offset + filter.count,
 	}
 	w.Header().Set("Content-Type", indexHTMLContentType)
 	err = tmpl.Execute(w, tmplData)
@@ -87,7 +113,13 @@ func (b *Browser) serveIndex(w http.ResponseWriter, r *http.Request) {
 }
 
 func filtered(events []Event, filter eventFilter) (list []Event) {
-	for _, each := range events {
+	// if group filter active then ignore paging
+	if filter.group != "" {
+		filter.offset = 0
+		filter.count = len(events)
+	}
+	for i := filter.offset; i < len(events) && len(list) < filter.count; i++ {
+		each := events[i]
 		if filter.level != "" && strings.ToLower(each.Level.String()) != filter.level {
 			continue
 		}
