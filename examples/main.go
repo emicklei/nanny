@@ -1,6 +1,7 @@
 package main
 
 import (
+	"flag"
 	"fmt"
 	"io"
 	"log/slog"
@@ -18,7 +19,12 @@ type Bike struct {
 
 const eventGroupMarker = "httpHandleFunc"
 
+var N = flag.Int("N", 10, "number of events to create")
+
 func main() {
+	flag.Parse()
+
+	// create recorder
 	// record max 100 events
 	rec := nanny.NewRecorder(
 		nanny.WithLogEventGroupOnError(true),
@@ -48,6 +54,15 @@ func main() {
 	slog.Info("to resume recording, open", "url", "http://localhost:8080/nanny?do=resume")
 	slog.Info("to flush recorded events, open", "url", "http://localhost:8080/nanny?do=flush")
 	slog.Info("to simulate log on error, open", "url", "http://localhost:8080/err")
+
+	slog.Info("generating events...", "N", *N)
+
+	// create events
+	for i := 0; i < *N; i++ {
+		handleDo()
+	}
+
+	// start http server
 	http.ListenAndServe(":8080", http.DefaultServeMux)
 }
 
@@ -61,6 +76,11 @@ func newRequestID() int64 {
 // http handler
 
 func do(w http.ResponseWriter, r *http.Request) {
+	handleDo()
+	io.WriteString(w, "done")
+}
+
+func handleDo() {
 	// start event group
 	glog := slog.Default().With(eventGroupMarker, fmt.Sprintf("%d:do", newRequestID()))
 
@@ -83,8 +103,6 @@ func do(w http.ResponseWriter, r *http.Request) {
 	ag.Info("two attributes in attr group in event group", "bike", bike, "color", "red")
 
 	internalDo(glog)
-
-	io.WriteString(w, "done")
 }
 
 func internalDo(parentLogger *slog.Logger) {
