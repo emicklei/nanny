@@ -7,7 +7,6 @@ import (
 	"io"
 	"log/slog"
 	"net/http"
-	"os"
 	"reflect"
 	"sort"
 	"strconv"
@@ -37,16 +36,19 @@ type eventFilter struct {
 	count  int
 }
 
+//go:embed index.html
+var contentHTML []byte
+
 func (b *Browser) serveStaticIndex(w http.ResponseWriter, r *http.Request) {
-	content, err := os.ReadFile("index.html")
-	if err != nil {
-		w.WriteHeader(500)
-		io.WriteString(w, err.Error())
-		return
-	}
+	// content, err := os.ReadFile("index.html")
+	// if err != nil {
+	// 	w.WriteHeader(500)
+	// 	io.WriteString(w, err.Error())
+	// 	return
+	// }
 
 	w.Header().Set("Content-Type", indexHTMLContentType)
-	w.Write(content)
+	w.Write(contentHTML)
 }
 
 func (b *Browser) serveIndex(w http.ResponseWriter, r *http.Request) {
