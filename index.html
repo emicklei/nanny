@@ -155,20 +155,22 @@
 <body>
 	<defs>
 			<table>
-				<tr class="summary">
-					<td class="toggler">
-						<div>▶</div>
-					</td>
-					<td data-field="t"></td>
-					<td data-field="l" class="level link"></td>
-					<td data-field="g" class="group link"></td>
-					<td data-field="m"></td>
-					<td data-field="a"></td>
-				</tr>
-				<tr class="content">
-					<td></td>
-					<td colspan="5">{{valueFormat .Attrs}}</td>
-				</tr>
+				<tbody>
+					<tr class="summary">
+						<td class="toggler">
+							<div>▶</div>
+						</td>
+						<td data-field="t"></td>
+						<td data-field="l" class="level link"></td>
+						<td data-field="g" class="group link"></td>
+						<td data-field="m"></td>
+						<td data-field="a"></td>
+					</tr>
+					<tr class="content">
+						<td></td>
+						<td colspan="5">{{valueFormat .Attrs}}</td>
+					</tr>
+				</tbody>
 			</table>
 	</defs>
 	<table class="sortable">
@@ -184,19 +186,25 @@
 		</thead>
 		<tbody class="events"></tbody>
 	</table>
-	<p>
-		Watched: {{.EventsSeen}} since: {{timeFormat .Since}}
+	<p id="controls">
+		<span>Data retrieved: </span><span data-field="lastFetchTimestamp"></span><span>, Total events retrieved: </span><span data-field="totalEventCount"></span>
 		<a id="reset-link" class="link">Reset filter</a>
-		<a href="?offset={{.OffsetPrevious}}">Previous Page</a>
-		<a href="?offset={{.OffsetNext}}">Next Page</a>
+		<a id="prev-page-link" class="link">Previous Page</a>
+		<span data-field="currentPageIndex"></span>
+		<a id="next-page-link" class="link">Next Page</a>
 	</p>
 	<script>
+		const globals = {
+			pageSize: 20,
+			currentPageIndex: 0,
+			events: [],
+			lastFetchTimestamp: null,
+			totalEventCount: 0
+		};
 		const fieldFormatters = {
-			t: (value) => { return value; },
-			l: (value) => { return value; },
-			g: (value) => { return value; },
-			m: (value) => { return value; },
-			a: (value) => { return JSON.stringify(value); }
+			a: (value) => { return JSON.stringify(value); },
+			currentPageIndex: (value) => { return `Events ${value * globals.pageSize + 1} to ${(value + 1) * globals.pageSize}`; },
+			lastFetchTimestamp: (value) => { return value.toISOString(); },
 		};
 		const filterNames = ["level", "group"];
 
@@ -209,6 +217,7 @@
 					if(!response.ok) {
 						throw new Error("Failed to load event data");
 					}
+					globals.lastFetchTimestamp = new Date();
 					return response.json();
 				})
 				.then((data) => {
@@ -219,16 +228,17 @@
 
 		// Update table with new events
 		function updateData(data) {
-			console.log(data);
+			globals.events = data;
+			globals.totalEventCount = data.length;
 
 			// Retrieve template rows
 			const summaryRow = document.querySelector("defs .summary");
 			const contentRow = document.querySelector("defs .content");
 
 			// Collect fields from the summary row
-			const fields = [];
+			const fieldNames = [];
 			summaryRow.querySelectorAll("[data-field]").forEach((cell, index) => {
-				fields[index] = cell.getAttribute("data-field");
+				fieldNames[index] = cell.getAttribute("data-field");
 			});
 
 			// Create rows in the table for each event
@@ -240,13 +250,24 @@
 
 				// Copy content into the row
 				const cells = newRow.children;
-				fields.forEach((field, index) => {
+				fieldNames.forEach((fieldName, index) => {
 					// First cell is toggler, so start at 1
-					cells[index + 1].textContent = fieldFormatters[field](event[field]);
+					cells[index + 1].textContent = formatField(event, fieldName);
 				});
 
 				// Append the row to the table
 				table.appendChild(newRow);
+			});
+
+			updateControls();
+		}
+
+		// Update the controls (incl. filter, stats, etc)
+		function updateControls() {
+			const fields = document.querySelectorAll("#controls [data-field]");
+			fields.forEach((field) => {
+				const fieldName = field.getAttribute("data-field");
+				field.textContent = formatField(globals, fieldName);
 			});
 		}
 
@@ -301,6 +322,13 @@
 				searchParams.delete(filterName);
 			});
 			window.location = "?" + searchParams.toString();	// Will replace full query string aka search parameters
+		}
+
+		// Answer a formatted value based on the specified field name.
+		// Field formatters have a fixed name which is (currently) unique amongst different objects.
+		function formatField(obj, fieldName) {
+			const fieldFormatter = fieldFormatters[fieldName] || ((value) => { return value; });
+			return fieldFormatter(obj[fieldName]);
 		}
 
 		// All is setup, start loading data
