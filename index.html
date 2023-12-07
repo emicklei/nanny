@@ -1,0 +1,466 @@
+<html>
+
+<head>
+	<title>Nanny</title>
+	<style>
+		* {
+			box-sizing: border-box;
+		}
+
+		body {
+			font-family: "Open Sans", Tahoma, Geneva, sans-serif;
+			-webkit-font-smoothing: antialiased;
+			-moz-osx-font-smoothing: grayscale;
+		}
+
+		defs {
+			display: none;
+		}
+
+		table {
+			border-spacing: 0;
+		}
+
+		/*
+			Header row is dark gray with white text.
+		*/
+		thead tr {
+			background-color: #c7c5c5;
+			color: #ffffff;
+		}
+
+		th {
+			text-align: left;
+			font-weight: normal;
+		}
+
+		/*
+		   Header has rounded border on top.
+		*/
+		th:first-child {
+			border-top-left-radius: 4px;
+		}
+
+		th:last-child {
+			border-top-right-radius: 4px;
+		}
+
+		/*
+			All odd rows are gray.
+		*/
+		tbody tr.odd {
+			background-color: #e4e4e4;
+		}
+
+		/*
+		   All rows have a rounded border (only visible for gray ones).
+		*/
+		tbody tr:nth-child(4n + 1) td:first-child {
+			border-top-left-radius: 4px;
+			border-bottom-left-radius: 4px;
+		}
+
+		tbody tr:nth-child(4n + 1) td:last-child {
+			border-top-right-radius: 4px;
+			border-bottom-right-radius: 4px;
+		}
+
+		/*
+		   Except for top row, which is attached to the header row
+		   and does not have a rounded top border.
+		*/
+		tbody tr:first-child td:first-child {
+			border-top-left-radius: 0;
+		}
+
+		tbody tr:first-child td:last-child {
+			border-top-right-radius: 0;
+		}
+
+		/*
+		   All content rows (showing JSON) have a rounded bottom border.
+		*/
+		tbody tr:nth-child(4n + 2) td:first-child {
+			border-bottom-left-radius: 4px;
+		}
+
+		tbody tr:nth-child(4n + 2) td:last-child {
+			border-bottom-right-radius: 4px;
+		}
+
+		tr.summary,
+		tr.summary + tr.content {
+			display: none;
+		}
+
+		tr.summary.filtered.visible,
+		tr.summary.filtered.visible + tr.content {
+			display: revert;
+		}
+
+		/*
+		   If content row is shown, remove rounded bottom border from
+		   summary row, because content (JSON) is attached to this summary row.
+		*/
+		tr.summary.with-content td:first-child {
+			border-bottom-left-radius: 0;
+		}
+
+		tr.summary.with-content td:last-child {
+			border-bottom-right-radius: 0;
+		}
+
+		/*
+		   Hide content row if not requested to show it.
+		*/
+		tr.summary.filtered.visible:not(.with-content) + tr.content {
+			display: none;
+		}
+
+		tr.content td {
+			white-space: pre;
+			padding-bottom: 1em;
+		}
+
+		td.toggler div {
+			width: 1em;
+			height: 1em;
+			cursor: pointer;
+			transform: rotate(0deg);
+			transition: transform .5s ease 0s;
+		}
+
+		tr.with-content td.toggler div {
+			transform: rotate(90deg)translate(0.2em, 0.1em);
+		}
+
+		tr.summary td {
+			white-space: nowrap;
+		}
+
+		td.group:not(:empty) {
+			cursor: pointer;
+		}
+
+		a.link,
+		td.link:hover,
+		span.link:hover {
+			color: blue;
+			cursor: pointer;
+		}
+		a:not(.bare).link,
+		td:not(.bare).link:hover,
+		span:not(.bare).link:hover {
+			text-decoration: underline;
+		}
+
+		td,
+		th {
+			padding: 4px;
+		}
+
+		#controls .highlight,
+		#filter-count.active {
+			font-weight: bold;
+		}
+	</style>
+</head>
+
+<body>
+	<defs>
+			<table>
+				<tbody>
+					<tr class="summary">
+						<td class="toggler">
+							<div>▶</div>
+						</td>
+						<td data-field="t"></td>
+						<td data-field="l" class="filter link"></td>
+						<td data-field="g" class="filter link"></td>
+						<td data-field="m"></td>
+						<td data-field="a"></td>
+					</tr>
+					<tr class="content">
+						<td></td>
+						<td colspan="5"></td>
+					</tr>
+				</tbody>
+			</table>
+	</defs>
+	<table class="sortable">
+		<thead>
+			<tr>
+				<th>&nbsp;</th>
+				<th>Time</th>
+				<th>Level</th>
+				<th>Group</th>
+				<th>Message</th>
+				<th>Attributes</th>
+			</tr>
+		</thead>
+		<tbody class="events"></tbody>
+	</table>
+	<p id="controls">
+		<span>Data retrieved: <span data-field="lastFetchTimestamp"></span>,</span>
+		<span>Total events: <span class="highlight" data-field="totalEventCount"></span>,</span>
+		<span id="filter-count">Filtered events: <span data-field="filteredEventCount"></span>,</span>
+		<span><a id="reset-link" class="link">Reset filter</a></span>
+		<span id="prev-page-link" class="bare link">◀</span>
+		<span data-field="currentPageIndex"></span>
+		<span id="next-page-link" class="bare link">▶</span>
+	</p>
+	<script>
+		const globals = {
+			pageSize: 10,
+			events: [],
+			lastFetchTimestamp: null,
+			totalEventCount: 0,
+			filterNames: [ "l", "g" ],	// Level and groups
+			filters: {},
+			filteredEventCount: 0,
+			currentPageIndex: 0,
+			maxPageIndex: 0
+		};
+		const fieldFormatters = {
+			a: (value) => { return JSON.stringify(value); },
+			currentPageIndex: (value) => { return `Events ${value * globals.pageSize + 1} to ${Math.min((value + 1) * globals.pageSize, globals.filteredEventCount)}`; },
+			lastFetchTimestamp: (value) => { return value.toISOString(); },
+		};
+
+		// Load events from nanny
+		function loadData(callback) {
+			const url = new URL(window.location);
+			url.searchParams.set("do", "events");
+			fetch(url)
+				.then((response) => {
+					if(!response.ok) {
+						throw new Error("Failed to load event data");
+					}
+					globals.lastFetchTimestamp = new Date();
+					return response.json();
+				})
+				.then((data) => {
+					callback(data);
+				})
+			;
+		}
+
+		// Update table with new events
+		function updateData(data) {
+			globals.events = data;
+			globals.totalEventCount = data.length;
+
+			// Retrieve template rows
+			const summaryRow = document.querySelector("defs .summary");
+			const contentRow = document.querySelector("defs .content");
+
+			// Collect fields from the summary row
+			const fieldNames = [];
+			summaryRow.querySelectorAll("[data-field]").forEach((cell, index) => {
+				fieldNames[index] = cell.getAttribute("data-field");
+			});
+
+			// Create rows in the table for each event
+			const table = document.querySelector("tbody.events");
+			data.forEach((event) => {
+
+				// Create a new row and attach event to it as property
+				const newRow = summaryRow.cloneNode(true);	// Deep clone copy
+				newRow.__data = event;
+
+				// Copy content into the row
+				const cells = newRow.children;
+				fieldNames.forEach((fieldName, index) => {
+					// First cell is toggler, so start at 1
+					cells[index + 1].textContent = formatField(event, fieldName);
+				});
+
+				// Append the row to the table
+				table.appendChild(newRow);
+
+				// Add content row, check if it has attributes (and enable toggler if so)
+				const newContentRow = contentRow.cloneNode(true);	// Deep clone copy
+				if(Object.keys(event.a).length > 0) {
+					// Add the JSON representation of the attributes to the content row
+					newContentRow.lastElementChild.textContent = JSON.stringify(event.a, null, "\t"); 
+				} else {
+					// Remove toggler and the visible triangle of toggler
+					cells[0].classList.remove("toggler");
+					cells[0].firstElementChild.remove();
+				}
+				table.appendChild(newContentRow);
+			});
+
+			// Update filters (which will update paging and controls)
+			updateFilters();
+		}
+
+		// Update the controls
+		function updateControls() {
+			const fields = document.querySelectorAll("#controls [data-field]");
+			fields.forEach((field) => {
+				const fieldName = field.getAttribute("data-field");
+				field.textContent = formatField(globals, fieldName);
+			});
+		}
+
+		// Update the filters
+		function updateFilters() {
+
+			// Check row by row if the events match the current filter.
+			// Keep track of the count og events within the filter.
+			const summaryRows = document.querySelectorAll("tbody.events .summary");
+			globals.filteredEventCount = 0;
+			summaryRows.forEach((row) => {
+
+				// Mark matched rows (events) as being part of filter
+				const event = row.__data;
+				if(filterEvent(event)) {
+					row.classList.add("filtered");
+					globals.filteredEventCount++;
+					if((globals.filteredEventCount % 2) === 1) {
+						row.classList.add("odd");
+					} else {
+						row.classList.remove("odd");
+					}
+				} else {
+					row.classList.remove("filtered");
+					row.classList.remove("visible");
+					row.classList.remove("odd");
+				}
+			});
+
+			// Mark if an actual filter is active (non empty)
+			const filterCountElement = document.getElementById("filter-count");
+			if(isFilterActive()) {
+				filterCountElement.classList.add("active");
+			} else {
+				filterCountElement.classList.remove("active");
+			}
+
+			// Update the paging with the new filter
+			updatePaging();
+		}
+
+		// Update paging
+		function updatePaging() {
+
+			// Update page index if it is no longer valid
+			globals.maxPageIndex = Math.floor(Math.max(globals.filteredEventCount - 1, 0) / globals.pageSize);
+			if(globals.currentPageIndex > globals.maxPageIndex) {
+				globals.currentPageIndex = globals.maxPageIndex;
+			}
+
+			// Mark filtered rows which are within page boundary as visible
+			const filteredRows = document.querySelectorAll("tbody.events .filtered");
+			const firstIndex = globals.currentPageIndex * globals.pageSize;
+			const lastIndex = firstIndex + globals.pageSize - 1;
+			filteredRows.forEach((row, index) => {
+				if(index >= firstIndex && index <= lastIndex) {
+					row.classList.add("visible");
+				} else {
+					row.classList.remove("visible");
+				}
+			});
+
+			// Update controls to show correct info
+			updateControls();
+		}
+
+		// Add event listeners
+		function addEventListeners() {
+
+			// Add click handler to filter cells to filter on their respective values.
+			globals.filterNames.forEach((filterName) => {
+				document.querySelectorAll(`tr.summary td.filter[data-field="${filterName}"]`).forEach((each) => {
+					each.addEventListener("click", (event) => {
+						setFilterParam(filterName, event.target.textContent);
+					});
+				});
+			});
+
+			// Add click handler to toggle showing the (JSON) value on separate row.
+			document.querySelectorAll("tr.summary td.toggler").forEach((each) => {
+				each.addEventListener("click", () => {
+					// Add class "with-content" to the summary row (i.e. parent of cell)
+					// to indicate the adjacent content row should be shown.
+					each.parentElement.classList.toggle("with-content");
+				});
+			});
+
+			// Add click handler to reset link
+			const resetLink = document.getElementById("reset-link");
+			resetLink.addEventListener("click", () => {
+				resetFilterParams();
+			});
+
+			// Add click handler to previous page link
+			const previousPageLink = document.getElementById("prev-page-link");
+			previousPageLink.addEventListener("click", () => {
+				switchPage(-1);
+			});
+
+			// Add click handler to next page link
+			const nextPageLink = document.getElementById("next-page-link");
+			nextPageLink.addEventListener("click", () => {
+				switchPage(+1);
+			});
+		}
+
+		// Filter function
+		function filterEvent(event) {
+			// Answer if all filtered keys have the expected value in the event
+			return Object.keys(globals.filters).every((filterKey) => {
+				return event[filterKey] === globals.filters[filterKey];
+			});
+		}
+
+		// Set the specified filter parameter to the specified value
+		function setFilterParam(key, value) {
+			globals.filters[key] = value;
+			updateFilters();
+		}
+
+		// Reset all filter parameters
+		function resetFilterParams() {
+			// Remove all known filter parameters
+			globals.filters = {};
+			updateFilters();
+		}
+
+		// Answer whether filter is active
+		function isFilterActive() {
+			return Object.keys(globals.filters).length > 0;
+		}
+
+		// Switch page
+		function switchPage(delta) {
+			globals.currentPageIndex += delta;
+			if(globals.currentPageIndex < 0) {
+				globals.currentPageIndex = 0;
+			} else if(globals.currentPageIndex > globals.maxPageIndex) {
+				globals.currentPageIndex = globals.maxPageIndex;
+			}
+			updatePaging();
+		}
+
+		// Answer a formatted value based on the specified field name.
+		// Field formatters have a fixed name which is (currently) unique amongst different objects.
+		function formatField(obj, fieldName) {
+			const fieldFormatter = fieldFormatters[fieldName] || ((value) => { return value; });
+			return fieldFormatter(obj[fieldName]);
+		}
+
+		// All is setup, start loading data
+		loadData((data) => {
+
+			// Update data once received
+			updateData(data);
+
+			// Add interaction to page
+			addEventListeners();
+		})
+	</script>
+</body>
+
+</html>
