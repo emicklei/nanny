@@ -7,6 +7,7 @@ import (
 	"io"
 	"log/slog"
 	"net/http"
+	"os"
 	"reflect"
 	"sort"
 	"strconv"
@@ -40,13 +41,16 @@ type eventFilter struct {
 var contentHTML []byte
 
 func (b *Browser) serveStaticIndex(w http.ResponseWriter, r *http.Request) {
-	// content, err := os.ReadFile("index.html")
-	// if err != nil {
-	// 	w.WriteHeader(500)
-	// 	io.WriteString(w, err.Error())
-	// 	return
-	// }
-
+	if os.Getenv("DEV") != "" {
+		fmt.Println("reloading ../index.html...")
+		content, err := os.ReadFile("../index.html")
+		if err != nil {
+			w.WriteHeader(500)
+			io.WriteString(w, err.Error())
+			return
+		}
+		contentHTML = content
+	}
 	w.Header().Set("Content-Type", indexHTMLContentType)
 	w.Write(contentHTML)
 }
