@@ -16,7 +16,7 @@ type BasicAuthHandler struct {
 func NewBasicAuthHandler(handler http.Handler, username, password string) *BasicAuthHandler {
 	// is it configured correctly?
 	if username == "" || password == "" {
-		slog.Warn("nanny.BasicAuthHandler is not configured correctly (missing username or password)")
+		slog.Warn("nanny.BasicAuthHandler is not configured (missing username or password)")
 	}
 	return &BasicAuthHandler{
 		Handler:  handler,
@@ -26,7 +26,7 @@ func NewBasicAuthHandler(handler http.Handler, username, password string) *Basic
 }
 
 func (h *BasicAuthHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	// was it configured correctly?
+	// was it configured?
 	if h.Username == "" || h.Password == "" {
 		h.Handler.ServeHTTP(w, r)
 		return

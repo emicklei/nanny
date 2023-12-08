@@ -89,12 +89,12 @@
 		}
 
 		tr.summary,
-		tr.summary + tr.content {
+		tr.summary+tr.content {
 			display: none;
 		}
 
 		tr.summary.filtered.visible,
-		tr.summary.filtered.visible + tr.content {
+		tr.summary.filtered.visible+tr.content {
 			display: revert;
 		}
 
@@ -113,7 +113,7 @@
 		/*
 		   Hide content row if not requested to show it.
 		*/
-		tr.summary.filtered.visible:not(.with-content) + tr.content {
+		tr.summary.filtered.visible:not(.with-content)+tr.content {
 			display: none;
 		}
 
@@ -148,6 +148,7 @@
 			color: blue;
 			cursor: pointer;
 		}
+
 		a:not(.bare).link,
 		td:not(.bare).link:hover,
 		span:not(.bare).link:hover {
@@ -168,24 +169,24 @@
 
 <body>
 	<defs>
-			<table>
-				<tbody>
-					<tr class="summary">
-						<td class="toggler">
-							<div>▶</div>
-						</td>
-						<td data-field="t"></td>
-						<td data-field="l" class="filter link"></td>
-						<td data-field="g" class="filter link"></td>
-						<td data-field="m"></td>
-						<td data-field="a"></td>
-					</tr>
-					<tr class="content">
-						<td></td>
-						<td colspan="5"></td>
-					</tr>
-				</tbody>
-			</table>
+		<table>
+			<tbody>
+				<tr class="summary">
+					<td class="toggler">
+						<div>▶</div>
+					</td>
+					<td data-field="t"></td>
+					<td data-field="l" class="filter link"></td>
+					<td data-field="g" class="filter link"></td>
+					<td data-field="m"></td>
+					<td data-field="a"></td>
+				</tr>
+				<tr class="content">
+					<td></td>
+					<td colspan="5"></td>
+				</tr>
+			</tbody>
+		</table>
 	</defs>
 	<table class="sortable">
 		<thead>
@@ -211,11 +212,11 @@
 	</p>
 	<script>
 		const globals = {
-			pageSize: 10,
+			pageSize: 40,
 			events: [],
 			lastFetchTimestamp: null,
 			totalEventCount: 0,
-			filterNames: [ "l", "g" ],	// Level and groups
+			filterNames: ["l", "g"],	// Level and groups
 			filters: {},
 			filteredEventCount: 0,
 			currentPageIndex: 0,
@@ -233,7 +234,7 @@
 			url.searchParams.set("do", "events");
 			fetch(url)
 				.then((response) => {
-					if(!response.ok) {
+					if (!response.ok) {
 						throw new Error("Failed to load event data");
 					}
 					globals.lastFetchTimestamp = new Date();
@@ -242,7 +243,7 @@
 				.then((data) => {
 					callback(data);
 				})
-			;
+				;
 		}
 
 		// Update table with new events
@@ -280,9 +281,9 @@
 
 				// Add content row, check if it has attributes (and enable toggler if so)
 				const newContentRow = contentRow.cloneNode(true);	// Deep clone copy
-				if(Object.keys(event.a).length > 0) {
+				if (Object.keys(event.a).length > 0) {
 					// Add the JSON representation of the attributes to the content row
-					newContentRow.lastElementChild.textContent = JSON.stringify(event.a, null, "\t"); 
+					newContentRow.lastElementChild.textContent = JSON.stringify(event.a, null, "\t");
 				} else {
 					// Remove toggler and the visible triangle of toggler
 					cells[0].classList.remove("toggler");
@@ -315,10 +316,10 @@
 
 				// Mark matched rows (events) as being part of filter
 				const event = row.__data;
-				if(filterEvent(event)) {
+				if (filterEvent(event)) {
 					row.classList.add("filtered");
 					globals.filteredEventCount++;
-					if((globals.filteredEventCount % 2) === 1) {
+					if ((globals.filteredEventCount % 2) === 1) {
 						row.classList.add("odd");
 					} else {
 						row.classList.remove("odd");
@@ -332,7 +333,7 @@
 
 			// Mark if an actual filter is active (non empty)
 			const filterCountElement = document.getElementById("filter-count");
-			if(isFilterActive()) {
+			if (isFilterActive()) {
 				filterCountElement.classList.add("active");
 			} else {
 				filterCountElement.classList.remove("active");
@@ -347,7 +348,7 @@
 
 			// Update page index if it is no longer valid
 			globals.maxPageIndex = Math.floor(Math.max(globals.filteredEventCount - 1, 0) / globals.pageSize);
-			if(globals.currentPageIndex > globals.maxPageIndex) {
+			if (globals.currentPageIndex > globals.maxPageIndex) {
 				globals.currentPageIndex = globals.maxPageIndex;
 			}
 
@@ -356,7 +357,7 @@
 			const firstIndex = globals.currentPageIndex * globals.pageSize;
 			const lastIndex = firstIndex + globals.pageSize - 1;
 			filteredRows.forEach((row, index) => {
-				if(index >= firstIndex && index <= lastIndex) {
+				if (index >= firstIndex && index <= lastIndex) {
 					row.classList.add("visible");
 				} else {
 					row.classList.remove("visible");
@@ -436,9 +437,9 @@
 		// Switch page
 		function switchPage(delta) {
 			globals.currentPageIndex += delta;
-			if(globals.currentPageIndex < 0) {
+			if (globals.currentPageIndex < 0) {
 				globals.currentPageIndex = 0;
-			} else if(globals.currentPageIndex > globals.maxPageIndex) {
+			} else if (globals.currentPageIndex > globals.maxPageIndex) {
 				globals.currentPageIndex = globals.maxPageIndex;
 			}
 			updatePaging();
