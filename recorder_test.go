@@ -109,7 +109,7 @@ func TestMaxEventGroups(t *testing.T) {
 	if got, want := len(rec.groupSet), 2; got != want {
 		t.Errorf("got [%v]:%T want [%v]:%T", got, got, want, want)
 	}
-	grps := rec.buildGroups() // includes the empty group
+	grps := rec.buildGroups(rec.events) // includes the empty group
 	if got, want := len(grps), 3; got != want {
 		t.Errorf("got [%v]:%T want [%v]:%T", got, got, want, want)
 	}
