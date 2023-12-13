@@ -16,7 +16,7 @@ type BasicAuthHandler struct {
 func NewBasicAuthHandler(handler http.Handler, username, password string) *BasicAuthHandler {
 	// is it configured correctly?
 	if username == "" || password == "" {
-		slog.Warn("basic auth is not configured for /nanny")
+		slog.Warn("no credentials configured for basic auth on /nanny")
 	}
 	return &BasicAuthHandler{
 		Handler:  handler,
