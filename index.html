@@ -224,7 +224,8 @@
 			filters: {},
 			filteredEventCount: 0,
 			currentPageIndex: 9999,		// Start at last page
-			maxPageIndex: 0
+			maxPageIndex: 0,
+			attrValueLength: 80
 		};
 		function formatAttrs(value) {
 			let sb = "";
@@ -233,19 +234,42 @@
 				sb += "=";
 				let val = value[key];
 				if (typeof val === 'object') {
-					sb += "{...} ";
+					sb += "{";
+					for (const subkey in val) {
+						sb += subkey;
+						sb += ",";
+					}
+					if (sb.endsWith(',')) {
+						sb = sb.slice(0, sb.length - 1); // remove last comma
+					}
+					sb += "} ";
 				} else {
-					sb += val.toString();
+					let sval = val.toString();
+					if (sval.length > globals.attrValueLength) {
+						sval = sval.slice(0, globals.attrValueLength) + " ...(" + sval.length.toString() + ")";
+					}
+					sb += sval;
 				}
 				sb += " ";
 			}
 			return sb.toString();
 		}
 
+		// Answer a local time from the specified date (which is either a date or a date string)
+		function formatLocalTimeFromDate(dateInput) {
+			const dateValue = new Date(dateInput);
+			if (Number.isNaN(dateValue.valueOf())) {
+				// Can't parse the date (assuming string input), just use the provided date string as result
+				return dateInput;
+			}
+
+			return `${dateValue.getHours()}:${dateValue.getMinutes()}:${dateValue.getSeconds()}.${dateValue.getMilliseconds()}`;
+		}
+
 		const fieldFormatters = {
 			a: formatAttrs,
 			l: (value) => { return value.slice(0, 1); },
-			t: (value) => { return new Date(value).toLocaleTimeString('en-US'); },
+			t: (value) => { return formatLocalTimeFromDate(value); },
 			currentPageIndex: (value) => { return `Events ${value * globals.pageSize + 1} to ${Math.min((value + 1) * globals.pageSize, globals.filteredEventCount)}`; },
 			lastFetchTimestamp: (value) => { return value.toISOString(); },
 		};
