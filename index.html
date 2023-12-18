@@ -145,7 +145,7 @@
 		a.link,
 		td.link:hover,
 		span.link:hover {
-			color: blue;
+			color: #174EA6;
 			cursor: pointer;
 		}
 
@@ -164,6 +164,10 @@
 		#filter-count.active {
 			font-weight: bold;
 		}
+
+		.msg {
+			color: #174EA6;
+		}
 	</style>
 </head>
 
@@ -173,12 +177,12 @@
 			<tbody>
 				<tr class="summary">
 					<td class="toggler">
-						<div>▶</div>
+						<div>&#65310;</div>
 					</td>
 					<td data-field="t"></td>
 					<td data-field="l" class="filter link"></td>
 					<td data-field="g" class="filter link"></td>
-					<td data-field="m"></td>
+					<td data-field="m" class="msg"></td>
 					<td data-field="a"></td>
 				</tr>
 				<tr class="content">
@@ -193,7 +197,7 @@
 			<tr>
 				<th>&nbsp;</th>
 				<th>Time</th>
-				<th>Level</th>
+				<th>L</th>
 				<th>Group</th>
 				<th>Message</th>
 				<th>Attributes</th>
@@ -219,11 +223,29 @@
 			filterNames: ["l", "g"],	// Level and groups
 			filters: {},
 			filteredEventCount: 0,
-			currentPageIndex: 0,
+			currentPageIndex: 9999,		// Start at last page
 			maxPageIndex: 0
 		};
+		function formatAttrs(value) {
+			let sb = "";
+			for (const key in value) {
+				sb += key;
+				sb += "=";
+				let val = value[key];
+				if (typeof val === 'object') {
+					sb += "{...} ";
+				} else {
+					sb += val.toString();
+				}
+				sb += " ";
+			}
+			return sb.toString();
+		}
+
 		const fieldFormatters = {
-			a: (value) => { return JSON.stringify(value); },
+			a: formatAttrs,
+			l: (value) => { return value.slice(0, 1); },
+			t: (value) => { return new Date(value).toLocaleTimeString('en-US'); },
 			currentPageIndex: (value) => { return `Events ${value * globals.pageSize + 1} to ${Math.min((value + 1) * globals.pageSize, globals.filteredEventCount)}`; },
 			lastFetchTimestamp: (value) => { return value.toISOString(); },
 		};
