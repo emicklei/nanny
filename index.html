@@ -271,7 +271,7 @@
 			l: (value) => { return value.slice(0, 1); },
 			t: (value) => { return formatLocalTimeFromDate(value); },
 			currentPageIndex: (value) => { return `Events ${value * globals.pageSize + 1} to ${Math.min((value + 1) * globals.pageSize, globals.filteredEventCount)}`; },
-			lastFetchTimestamp: (value) => { return value.toISOString(); },
+			lastFetchTimestamp: (value) => { return formatLocalTimeFromDate(value); },
 		};
 
 		// Load events from nanny
