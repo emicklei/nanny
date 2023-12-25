@@ -46,7 +46,7 @@ func (r RecordCondition) withRegexp() RecordCondition {
 }
 
 // Matches returns true if the event matches the specification of this condition.
-func (r RecordCondition) Matches(ev Event) bool {
+func (r RecordCondition) Matches(ev *Event) bool {
 	if !r.Enabled {
 		return true
 	}

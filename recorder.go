@@ -9,9 +9,15 @@ import (
 	"time"
 )
 
+var eventPool = sync.Pool{
+	New: func() any {
+		return new(Event)
+	},
+}
+
 type recorder struct {
 	mutex                sync.RWMutex
-	events               []Event
+	events               []*Event
 	retentionStrategy    RetentionStrategy
 	groupMarkers         []string
 	groupSet             map[string]bool
@@ -64,7 +70,7 @@ func WithLogEventGroupOnError(enabled bool) RecorderOption {
 func NewRecorder(opts ...RecorderOption) *recorder {
 	r := &recorder{
 		mutex:        sync.RWMutex{},
-		events:       []Event{},
+		events:       []*Event{},
 		groupMarkers: []string{"func"},
 		groupSet:     map[string]bool{},
 		stats: &recordingStats{
@@ -85,13 +91,13 @@ func (r *recorder) Record(fallback slog.Handler, level slog.Level, group, messag
 	if !r.isRecording {
 		return
 	}
-	ev := Event{
-		Time:    time.Now(),
-		Level:   level,
-		Group:   group,
-		Message: message,
-		Attrs:   snapshotAttrs(attrs),
-	}
+	ev := eventPool.Get().(*Event)
+	ev.Time = time.Now()
+	ev.Level = level
+	ev.Group = group
+	ev.Message = message
+	ev.Attrs = snapshotAttrs(attrs)
+
 	r.mutex.Lock()
 	r.events = append(r.events, ev)
 	r.stats.Count++
@@ -109,8 +115,8 @@ func (r *recorder) Record(fallback slog.Handler, level slog.Level, group, messag
 
 func (r *recorder) logEventGroup(handler slog.Handler, group string) {
 	r.mutex.RLock()
-	// make copy so new Record calls are not blocked
-	list := make([]Event, len(r.events))
+	// make slice copy so new Record calls are not blocked
+	list := make([]*Event, len(r.events))
 	copy(list, r.events)
 	r.mutex.RUnlock()
 	ctx := context.Background()
@@ -147,10 +153,10 @@ func (r *recorder) Log() {
 	}
 }
 
-func (r *recorder) snapshotEvents() []Event {
+func (r *recorder) snapshotEvents() []*Event {
 	r.mutex.RLock()
 	defer r.mutex.RUnlock()
-	list := make([]Event, len(r.events))
+	list := make([]*Event, len(r.events))
 	copy(list, r.events)
 	return list
 }
@@ -166,23 +172,31 @@ func (r *recorder) resume() {
 func (r *recorder) flush() {
 	r.mutex.Lock()
 	defer r.mutex.Unlock()
-	r.events = []Event{}
+	for _, ev := range r.events {
+		eventPool.Put(ev)
+	}
+	r.events = []*Event{}
 }
 
 func (r *recorder) clear() {
 	r.mutex.Lock()
 	defer r.mutex.Unlock()
-	r.events = []Event{}
+	for _, ev := range r.events {
+		eventPool.Put(ev)
+	}
+	// clear cache
+	r.groupSet = map[string]bool{}
+	r.events = []*Event{}
 }
 
 type eventGroup struct {
 	name   string
-	events []Event
+	events []*Event
 }
 
 // order of events in group are preserved, groups are also in order
 // Pre: mutex has read lock
-func (r *recorder) buildGroups(list []Event) []eventGroup {
+func (r *recorder) buildGroups(list []*Event) []eventGroup {
 	groups := []eventGroup{{}} // for the no group
 	for _, each := range list {
 		// lookup group
@@ -197,7 +211,7 @@ func (r *recorder) buildGroups(list []Event) []eventGroup {
 		if !found {
 			groups = append(groups, eventGroup{
 				name:   each.Group,
-				events: []Event{each},
+				events: []*Event{each},
 			})
 		}
 	}
@@ -220,9 +234,10 @@ func (r *recorder) removeOldestEventGroup() {
 		return
 	}
 	// remove events by copying
-	remaining := []Event{}
+	remaining := []*Event{}
 	for _, each := range r.events {
 		if each.Group == target {
+			eventPool.Put(each)
 			continue
 		}
 		remaining = append(remaining, each)
