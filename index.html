@@ -255,6 +255,13 @@
 			return sb.toString();
 		}
 
+		function twoDigitsString(num) {
+			return num < 10 ? "0" + num.toString() : num.toString();
+		}
+		function threeDigitsString(num) {
+			return num < 10 ? "00" + num.toString() : (num < 100 ? "0" + num.toString() : num.toString());
+		}
+
 		// Answer a local time from the specified date (which is either a date or a date string)
 		function formatLocalTimeFromDate(dateInput) {
 			const dateValue = new Date(dateInput);
@@ -263,7 +270,7 @@
 				return dateInput;
 			}
 
-			return `${dateValue.getHours()}:${dateValue.getMinutes()}:${dateValue.getSeconds()}.${dateValue.getMilliseconds()}`;
+			return `${twoDigitsString(dateValue.getHours())}:${twoDigitsString(dateValue.getMinutes())}:${twoDigitsString(dateValue.getSeconds())}.${threeDigitsString(dateValue.getMilliseconds())}`;
 		}
 
 		const fieldFormatters = {
