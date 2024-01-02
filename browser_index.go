@@ -31,6 +31,8 @@ type eventFilter struct {
 var contentHTML []byte
 
 func (b *Browser) serveStaticIndex(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", indexHTMLContentType)
+	// serve content
 	if os.Getenv("DEV") != "" {
 		fmt.Println("reloading ../index.html...")
 		content, err := os.ReadFile("../index.html")
@@ -41,6 +43,5 @@ func (b *Browser) serveStaticIndex(w http.ResponseWriter, r *http.Request) {
 		}
 		contentHTML = content
 	}
-	w.Header().Set("Content-Type", indexHTMLContentType)
 	w.Write(contentHTML)
 }
