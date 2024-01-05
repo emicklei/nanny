@@ -97,6 +97,7 @@ func (r *recorder) Record(fallback slog.Handler, level slog.Level, group, messag
 	ev.Group = group
 	ev.Message = message
 	ev.Attrs = snapshotAttrs(attrs)
+	ev.computeMemory()
 
 	r.mutex.Lock()
 	r.events = append(r.events, ev)
@@ -187,6 +188,13 @@ func (r *recorder) clear() {
 	// clear cache
 	r.groupSet = map[string]bool{}
 	r.events = []*Event{}
+}
+
+func (r *recorder) computeEventsMemory() (size int64) {
+	for _, each := range r.events {
+		size += int64(each.memorySize)
+	}
+	return
 }
 
 type eventGroup struct {
