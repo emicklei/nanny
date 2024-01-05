@@ -43,6 +43,8 @@ or by composing the setup yourself:
 
 	slog.Debug("debug", "hello", "world")
 ```
+
+Then after starting your HTTP service, you can access `/nanny` to see and explore your log events.
  
 
 ## event groups
