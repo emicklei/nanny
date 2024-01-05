@@ -49,6 +49,7 @@ func (b *Browser) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 func (b *Browser) serveEvents(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("x-nanny-stats-count", fmt.Sprintf("%d", b.recorder.stats.Count))
 	w.Header().Set("x-nanny-stats-started-seconds", fmt.Sprintf("%d", b.recorder.stats.Started.Unix()))
+	w.Header().Set("x-nanny-stats-memory-bytes", fmt.Sprintf("%d", b.recorder.computeEventsMemory()))
 	w.Header().Set("Content-Type", "application/json")
 	enc := json.NewEncoder(w)
 	enc.SetIndent("", "  ")
