@@ -8,6 +8,10 @@ Records a sliding window of slog events with all attribute values for remote ins
 ## usage
 
 ```go
+	import "github.com/emicklei/nanny"
+
+	...
+
 	nanny.SetupDefault()
 	slog.Debug("debug", "hello", "world")
 ```
@@ -16,7 +20,14 @@ or by composing the setup yourself:
 
 
 ```go
-	r := nanny.NewRecorder()
+	r := nanny.NewRecorder(
+		nanny.WithLogEventGroupOnError(true),
+		nanny.WithMaxEventGroups(100),
+		// any of these attribute keys can be used for event grouping
+		nanny.WithGroupMarkers(
+			"func",
+			"X-Cloud-Trace-Context",
+			"X-Request-ID"))
 
 	// recorder captures debug 
 	l := slog.New(nanny.NewLogHandler(r, slog.Default().Handler(), slog.LevelDebug)) // or nanny.LevelTrace
@@ -24,8 +35,11 @@ or by composing the setup yourself:
 	// replace the default logger
 	slog.SetDefault(l)
 
-	// serve the events
-	http.Handle("/nanny", nanny.NewBrowser(r))
+	// serve the events, protect using basic auth
+	http.Handle("/nanny", nanny.NewBasicAuthHandler(
+		nanny.NewBrowser(rec),
+		os.Getenv("NANNY_USER"),
+		os.Getenv("NANNY_PASSWORD")))
 
 	slog.Debug("debug", "hello", "world")
 ```
@@ -44,6 +58,8 @@ Here `func` is the default event group marker.
 You can change the group keys to whatever you want using the RecorderOption `WithGroupMarkers`.
 
 ## log event group on error
+
+With this option, if an Error event is recorded then all leading debug and trace events in the same group are logger first.
 
 ```go
 	r := nanny.NewRecorder(nanny.WithLogEventGroupOnError(true))
