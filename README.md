@@ -91,3 +91,16 @@ With this option, if an Error event is recorded then all leading debug and trace
 |g|group|
 |m|message|  
 |a|attributes|
+
+## how it works
+
+Your program calls `slog.Debug` which creates an `slog.Record` which is sent to the default `slog.Handler`.
+If the default handler is a `nanny.SlogHandler` then the record is first sent to a `nanny.Recorder`.
+The `nanny.Recorder` keeps the last N record copies in memory and adds grouping information to them.
+Records from the `nanny.Recorder` are served by the `nanny.Browser` using an HTTP endpoint.
+
+A `nanny.SlogHandler` wraps (decorates) another `slog.Handler`, the fallback handler.
+Both the `nanny.SlogHandler` and the fallback handler respond to a certain `slog.Level`.
+If the `nanny.SlogHandler` is enabled for the log level of the record then it is sent to fallback handler.
+If the fallback handler is enabled for the log level of the record then it is sent to the fallback output.
+So if the fallback handler is configured for INFO only then the TRACE and DEBUG records are kept by the `nanny.Recorder` only ; they are not logged to the output of the fallback handler.
