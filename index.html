@@ -166,7 +166,7 @@
 		}
 
 		.msg {
-			color: #174EA6;
+			color: #620245;
 		}
 	</style>
 </head>
@@ -210,14 +210,14 @@
 		<span data-field="currentPageIndex"></span>
 		<span id="next-page-link" class="bare link">▶</span>
 		<span><a id="reset-link" class="link">Reset filter</a></span>
-		<span id="filter-count">filtered: <span data-field="filteredEventCount"></span>,</span>
+		<span id="filter-count">filtered: <span class="highlight" data-field="filteredEventCount"></span>,</span>
 		<span>total: <span class="highlight" data-field="totalEventCount"></span>,</span>
 
 		<span>retrieved: <span data-field="lastFetchTimestamp"></span>,</span>
-		<span>monitored: <span data-field="statsCount"></span>,</span>
+		<span>monitored: <span class="highlight" data-field="statsCount"></span>,</span>
 		<span>since: <span data-field="statsSince"></span>,</span>
-		<span>memory: <span data-field="statsMemoryPretty"></span>,</span>
-		<span>v0.11.0</span>
+		<span>memory: <span class="highlight" data-field="statsMemoryPretty"></span>,</span>
+		<span data-field="version"></span>
 
 	</p>
 	<script>
@@ -234,7 +234,8 @@
 			attrValueLength: 80,
 			statsCount: 0,
 			statsSince: 0,
-			statsMemoryPretty: ""
+			statsMemoryPretty: "",
+			version: "dev"
 		};
 		function formatAttrs(value) {
 			let sb = "";
@@ -305,6 +306,7 @@
 					d.setUTCSeconds(response.headers.get('x-nanny-stats-started-seconds'));
 					globals.statsSince = d.toLocaleString();
 					globals.statsMemoryPretty = humanFileSize(response.headers.get('x-nanny-stats-memory-bytes'));
+					globals.version = response.headers.get('x-nanny-version');
 					return response.json();
 				})
 				.then((data) => {
