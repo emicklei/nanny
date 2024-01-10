@@ -165,6 +165,27 @@
 			font-weight: bold;
 		}
 
+		#filters:empty {
+			display: none;
+		}
+
+		#filters .button {
+			display: inline-block;
+			border: 1px solid #666;
+			border-radius: 4px;
+			padding: 4px 8px;
+		}
+		#filters .button .label::after {
+			content: ": ";
+		}
+		#filters .remove {
+			border: none;
+			font-weight: bold;
+			color: #000;
+			background-color: transparent;
+			cursor: pointer;
+		}
+
 		.msg {
 			color: #620245;
 		}
@@ -180,9 +201,9 @@
 						<div>&#65310;</div>
 					</td>
 					<td data-field="t"></td>
-					<td data-field="l" class="filter link"></td>
-					<td data-field="g" class="filter link"></td>
-					<td data-field="m" class="msg filter link"></td>
+					<td data-field="l" data-label="level" class="filter link"></td>
+					<td data-field="g" data-label="group" class="filter link"></td>
+					<td data-field="m" data-label="msg" class="msg filter link"></td>
 					<td data-field="a"></td>
 				</tr>
 				<tr class="content">
@@ -205,7 +226,7 @@
 		</thead>
 		<tbody class="events"></tbody>
 	</table>
-	<p id="controls">
+	<div id="controls">
 		<span id="prev-page-link" class="bare link">◀</span>
 		<span data-field="currentPageIndex"></span>
 		<span id="next-page-link" class="bare link">▶</span>
@@ -219,7 +240,8 @@
 		<span>memory: <span class="highlight" data-field="statsMemoryPretty"></span>,</span>
 		<span data-field="version"></span>
 
-	</p>
+	</div>
+	<div id="filters"></div>
 	<script>
 		const globals = {
 			pageSize: 40,
@@ -227,6 +249,7 @@
 			lastFetchTimestamp: null,
 			totalEventCount: 0,
 			filterNames: [],	// Will be retrieved from DOM (fields with class "filter")
+			filterLabels: {},	// idem
 			filters: {},
 			filteredEventCount: 0,
 			currentPageIndex: 9999,		// Start at last page
@@ -408,8 +431,55 @@
 				filterCountElement.classList.remove("active");
 			}
 
+			// Show buttons to allow removal of individual filters
+			updateFilterRemovalButtons();
+
 			// Update the paging with the new filter
 			updatePaging();
+		}
+
+		function updateFilterRemovalButtons() {
+			const filtersInUse = Object.keys(globals.filters);
+			document.querySelectorAll("#filters .button").forEach((each) => {
+				const filterName = each.getAttribute("data-filter");
+				const index = filtersInUse.indexOf(filterName);
+				if(index >= 0) {
+					// Update filter value (just in case it changed)
+					each.querySelector(".label").textContent = globals.filters[filterName];
+
+					// Remove filter from in use list
+					filtersInUse.splice(index, 1);
+				} else {
+					// Filter is no longer in use, remove from page
+					each.remove();
+				}
+			});
+
+			// Add the missing filters
+			const filtersContainer = document.getElementById("filters");
+			filtersInUse.forEach((each) => {
+				// Create button
+				const button = document.createElement("span");
+				button.classList.add("button");
+				const label = document.createElement("span");
+				label.classList.add("label");
+				label.textContent = globals.filterLabels[each];
+				const value = document.createElement("span");
+				value.classList.add("value");
+				value.textContent = globals.filters[each];
+				const remove = document.createElement("button");
+				remove.classList.add("remove");
+				remove.textContent = "❌";
+				button.appendChild(label);
+				button.appendChild(value);
+				button.appendChild(remove);
+				filtersContainer.appendChild(button);
+
+				// Add event handler
+				remove.addEventListener("click", () => {
+					clearFilterParam(each);
+				});
+			});
 		}
 
 		// Update paging
@@ -479,7 +549,10 @@
 
 		function initFilterNames() {
 			document.querySelectorAll("tr.summary td.filter[data-field]").forEach((each) => {
-				globals.filterNames.push(each.getAttribute("data-field"));
+				const name = each.getAttribute("data-field");
+				const label = each.getAttribute("data-label");
+				globals.filterNames.push(name);
+				globals.filterLabels[name] = label;
 			});
 		}
 
@@ -494,6 +567,12 @@
 		// Set the specified filter parameter to the specified value
 		function setFilterParam(key, value) {
 			globals.filters[key] = value;
+			updateFilters();
+		}
+
+		// Clear specified filter parameter
+		function clearFilterParam(key) {
+			delete globals.filters[key];
 			updateFilters();
 		}
 
