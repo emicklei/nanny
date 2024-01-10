@@ -1,3 +1,3 @@
 package nanny
 
-var Version = "v1.12.0"
+var Version = "v1.13.0"

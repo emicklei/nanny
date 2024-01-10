@@ -182,7 +182,7 @@
 					<td data-field="t"></td>
 					<td data-field="l" class="filter link"></td>
 					<td data-field="g" class="filter link"></td>
-					<td data-field="m" class="msg"></td>
+					<td data-field="m" class="msg filter link"></td>
 					<td data-field="a"></td>
 				</tr>
 				<tr class="content">
@@ -226,7 +226,7 @@
 			events: [],
 			lastFetchTimestamp: null,
 			totalEventCount: 0,
-			filterNames: ["l", "g"],	// Level and groups
+			filterNames: [],	// Will be retrieved from DOM (fields with class "filter")
 			filters: {},
 			filteredEventCount: 0,
 			currentPageIndex: 9999,		// Start at last page
@@ -477,11 +477,17 @@
 			});
 		}
 
+		function initFilterNames() {
+			document.querySelectorAll("tr.summary td.filter[data-field]").forEach((each) => {
+				globals.filterNames.push(each.getAttribute("data-field"));
+			});
+		}
+
 		// Filter function
 		function filterEvent(event) {
 			// Answer if all filtered keys have the expected value in the event
 			return Object.keys(globals.filters).every((filterKey) => {
-				return event[filterKey] === globals.filters[filterKey];
+				return formatField(event, filterKey) === globals.filters[filterKey];
 			});
 		}
 
@@ -523,6 +529,9 @@
 
 		// All is setup, start loading data
 		loadData((data) => {
+
+			// Initialize filtering
+			initFilterNames();
 
 			// Update data once received
 			updateData(data);
