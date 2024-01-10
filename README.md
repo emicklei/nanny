@@ -22,7 +22,7 @@ or by composing the setup yourself:
 ```go
 	r := nanny.NewRecorder()
 
-	// recorder captures debug forwarding to existing handler
+	// recorder captures debug and forwards to existing handler
 	l := slog.New(nanny.NewLogHandler(r, slog.Default().Handler(), slog.LevelDebug)) // or nanny.LevelTrace
 	
 	// replace the default logger
