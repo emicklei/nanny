@@ -100,10 +100,10 @@
 
 		/* Use coloring for different levels */
 		tr.summary.level-warn {
-			background-color: orange;
+			background-color: rgb(247, 224, 181);
 		}
 		tr.summary.level-error {
-			background-color: red;
+			background-color: rgb(248, 185, 185);
 		}
 
 		/*
@@ -320,9 +320,16 @@
 			return `${twoDigitsString(dateValue.getHours())}:${twoDigitsString(dateValue.getMinutes())}:${twoDigitsString(dateValue.getSeconds())}.${threeDigitsString(dateValue.getMilliseconds())}`;
 		}
 
+		function formatLabel(levelString) {
+			if (levelString === "DEBUG-4") {
+				return 'T'; // nanny.Trace
+			}
+			return levelString.slice(0, 1);
+		}
+
 		const fieldFormatters = {
 			a: formatAttrs,
-			l: (value) => { return value.slice(0, 1); },
+			l: (value) => { return formatLabel(value); },
 			t: (value) => { return formatLocalTimeFromDate(value); },
 			currentPageIndex: (value) => { return `Events ${value * globals.pageSize + 1} to ${Math.min((value + 1) * globals.pageSize, globals.filteredEventCount)}`; },
 			lastFetchTimestamp: (value) => { return formatLocalTimeFromDate(value); },

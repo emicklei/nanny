@@ -259,12 +259,12 @@ func snapshotAttrs(attrs map[string]any) map[string]any {
 	out := make(map[string]any, len(attrs))
 	data, err := json.Marshal(attrs)
 	if err != nil {
-		out["error"] = err.Error()
+		out["marshal.error"] = err.Error()
 		return out
 	}
 	err = json.Unmarshal(data, &out)
 	if err != nil {
-		out["error"] = err.Error()
+		out["unmarshal.error"] = err.Error()
 		return out
 	}
 	return out
