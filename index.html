@@ -98,6 +98,14 @@
 			display: revert;
 		}
 
+		/* Use coloring for different levels */
+		tr.summary.level-warn {
+			background-color: orange;
+		}
+		tr.summary.level-error {
+			background-color: red;
+		}
+
 		/*
 		   If content row is shown, remove rounded bottom border from
 		   summary row, because content (JSON) is attached to this summary row.
@@ -169,14 +177,15 @@
 			display: none;
 		}
 
+		#filters::before {
+			content: "Applied filters: ";
+		}
+
 		#filters .button {
 			display: inline-block;
 			border: 1px solid #666;
 			border-radius: 4px;
 			padding: 4px 8px;
-		}
-		#filters .button .label::after {
-			content: ": ";
 		}
 		#filters .remove {
 			border: none;
@@ -186,7 +195,7 @@
 			cursor: pointer;
 		}
 
-		.msg {
+		td[data-field="m"] {
 			color: #620245;
 		}
 	</style>
@@ -203,7 +212,7 @@
 					<td data-field="t"></td>
 					<td data-field="l" data-label="level" class="filter link"></td>
 					<td data-field="g" data-label="group" class="filter link"></td>
-					<td data-field="m" data-label="msg" class="msg filter link"></td>
+					<td data-field="m" data-label="msg" class="filter link"></td>
 					<td data-field="a"></td>
 				</tr>
 				<tr class="content">
@@ -212,6 +221,11 @@
 				</tr>
 			</tbody>
 		</table>
+		<span class="button">
+			<span class="label"></span>:
+			<span class="value"></span>
+			<button class="remove">❌</button>
+		</span>
 	</defs>
 	<table class="sortable">
 		<thead>
@@ -361,6 +375,9 @@
 				const newRow = summaryRow.cloneNode(true);	// Deep clone copy
 				newRow.__data = event;
 
+				// Add event severity level as class
+				newRow.classList.add("level-" + event.l.toLocaleLowerCase());
+
 				// Copy content into the row
 				const cells = newRow.children;
 				fieldNames.forEach((fieldName, index) => {
@@ -459,24 +476,13 @@
 			const filtersContainer = document.getElementById("filters");
 			filtersInUse.forEach((each) => {
 				// Create button
-				const button = document.createElement("span");
-				button.classList.add("button");
-				const label = document.createElement("span");
-				label.classList.add("label");
-				label.textContent = globals.filterLabels[each];
-				const value = document.createElement("span");
-				value.classList.add("value");
-				value.textContent = globals.filters[each];
-				const remove = document.createElement("button");
-				remove.classList.add("remove");
-				remove.textContent = "❌";
-				button.appendChild(label);
-				button.appendChild(value);
-				button.appendChild(remove);
+				const button = document.querySelector("defs .button").cloneNode(true);	// Deep clone copy
+				button.querySelector(".label").textContent = globals.filterLabels[each];
+				button.querySelector(".value").textContent = globals.filters[each];
 				filtersContainer.appendChild(button);
 
-				// Add event handler
-				remove.addEventListener("click", () => {
+				// Add event handler to remove button
+				button.querySelector(".remove").addEventListener("click", () => {
 					clearFilterParam(each);
 				});
 			});
