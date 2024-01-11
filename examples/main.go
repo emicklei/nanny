@@ -1,6 +1,7 @@
 package main
 
 import (
+	"errors"
 	"flag"
 	"fmt"
 	"io"
@@ -44,6 +45,13 @@ func main() {
 	// serve captured events
 	http.Handle("/nanny", nanny.NewBrowser(rec, nanny.WithPageSize(10)))
 
+	slog.Info("generating events...", "N", *N)
+
+	// create events
+	for i := 0; i < *N; i++ {
+		handleDo()
+	}
+
 	// serve
 	slog.Info("to create events, open", "url", "http://localhost:8080/do", "port", 8080)
 	slog.Info("to browse events, open", "url", "http://localhost:8080/nanny")
@@ -54,13 +62,6 @@ func main() {
 	slog.Info("to resume recording, open", "url", "http://localhost:8080/nanny?do=resume")
 	slog.Info("to flush recorded events, open", "url", "http://localhost:8080/nanny?do=flush")
 	slog.Info("to simulate log on error, open", "url", "http://localhost:8080/err")
-
-	slog.Info("generating events...", "N", *N)
-
-	// create events
-	for i := 0; i < *N; i++ {
-		handleDo()
-	}
 
 	// start http server
 	http.ListenAndServe(":8080", http.DefaultServeMux)
@@ -103,6 +104,12 @@ func handleDo() {
 	ag.Info("two attributes in attr group in event group", "bike", bike, "color", "red")
 
 	internalDo(glog)
+
+	glog.Info("info")
+	glog.Debug("debug")
+	nanny.Trace(glog, "trace")
+	glog.Warn("warn")
+	glog.Error("error", "err", errors.New("some error"))
 }
 
 func internalDo(parentLogger *slog.Logger) {
@@ -122,5 +129,6 @@ func err(w http.ResponseWriter, r *http.Request) {
 	lg.Info("info")
 	lg.Debug("debug")
 	nanny.Trace(lg, "trace")
+	lg.Warn("warn")
 	lg.Error("error")
 }

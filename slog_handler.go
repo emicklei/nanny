@@ -2,6 +2,7 @@ package nanny
 
 import (
 	"context"
+	"fmt"
 	"log/slog"
 )
 
@@ -35,7 +36,13 @@ func (h *SlogHandler) Handle(ctx context.Context, rec slog.Record) error {
 			collect[a.Key] = a.Value.Any()
 		}
 		rec.Attrs(func(a slog.Attr) bool {
-			collect[a.Key] = a.Value.Any()
+			val := a.Value.Any()
+			// if an error then add its string value and type too
+			if err, ok := val.(error); ok {
+				collect[a.Key+".String"] = err.Error()
+				collect[a.Key+".type"] = fmt.Sprintf("%T", val)
+			}
+			collect[a.Key] = val
 			return true
 		})
 		if h.attrGroup != "" {
