@@ -115,11 +115,8 @@ func (r *recorder) Record(fallback slog.Handler, level slog.Level, group, messag
 }
 
 func (r *recorder) logEventGroup(handler slog.Handler, group string) {
-	r.mutex.RLock()
-	// make slice copy so new Record calls are not blocked
-	list := make([]*Event, len(r.events))
-	copy(list, r.events)
-	r.mutex.RUnlock()
+	// make copy so new Record calls are not blocked
+	list := r.snapshotEvents()
 	ctx := context.Background()
 	for _, ev := range list {
 		if ev.Group != group {
@@ -137,8 +134,8 @@ func (r *recorder) logEventGroup(handler slog.Handler, group string) {
 	}
 }
 
-// Log outputs all events using the TextHandler
-func (r *recorder) Log() {
+// log outputs all events using the TextHandler
+func (r *recorder) log() {
 	// make copy so new Record calls are not blocked
 	list := r.snapshotEvents()
 	// do not use default handler because that could be a recording one
@@ -262,10 +259,7 @@ func snapshotAttrs(attrs map[string]any) map[string]any {
 		out["marshal.error"] = err.Error()
 		return out
 	}
-	err = json.Unmarshal(data, &out)
-	if err != nil {
-		out["unmarshal.error"] = err.Error()
-		return out
-	}
+	// always succeeds
+	json.Unmarshal(data, &out)
 	return out
 }

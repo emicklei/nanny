@@ -27,5 +27,5 @@ func TestLogHandler(t *testing.T) {
 	gl.Info("test2", "k", "l")
 
 	fmt.Println("recorded log:")
-	r.Log()
+	r.log()
 }

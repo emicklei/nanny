@@ -5,12 +5,33 @@ import (
 	"log/slog"
 	"os"
 	"testing"
+	"time"
 )
 
 func TestRecorder(t *testing.T) {
+	var someAttrs = map[string]any{
+		"pi":    3.14159,
+		"color": "pink",
+	}
 	rec := NewRecorder()
-	rec.Record(slog.Default().Handler(), slog.LevelDebug, "grp", "msg", nil)
-	rec.Log()
+	rec.Record(slog.Default().Handler(), slog.LevelDebug, "grp", "msg", someAttrs)
+	e := rec.events[0]
+	e.Time, _ = time.Parse(time.RFC3339, "2006-01-02T15:04:05Z")
+	if got, want := e.Level, slog.LevelDebug; got != want {
+		t.Errorf("got [%v:%T] want [%v:%T]", got, got, want, want)
+	}
+	if got, want := e.Group, "grp"; got != want {
+		t.Errorf("got [%v:%T] want [%v:%T]", got, got, want, want)
+	}
+	if got, want := e.Attrs["msg"], any(nil); got != want {
+		t.Errorf("got [%v:%T] want [%v:%T]", got, got, want, want)
+	}
+	if got, want := e.memorySize, 262; got != want {
+		t.Errorf("got [%v:%T] want [%v:%T]", got, got, want, want)
+	}
+	if got, want := rec.computeEventsMemory(), int64(262); got != want {
+		t.Errorf("got [%v:%T] want [%v:%T]", got, got, want, want)
+	}
 }
 
 func TestRecorderStopResumeFlush(t *testing.T) {
@@ -19,6 +40,11 @@ func TestRecorderStopResumeFlush(t *testing.T) {
 	rec.stop()
 	rec.flush()
 	rec.resume()
+	rec.Record(slog.Default().Handler(), slog.LevelDebug, "grp", "msg", nil)
+	if got, want := len(rec.events), 1; got != want {
+		t.Errorf("got [%v]:%T want [%v]:%T", got, got, want, want)
+	}
+	rec.clear()
 	if got, want := len(rec.events), 0; got != want {
 		t.Errorf("got [%v]:%T want [%v]:%T", got, got, want, want)
 	}
@@ -39,7 +65,7 @@ func TestGroupMarker(t *testing.T) {
 	g := l.With("func", "TestGroupMarker")
 	g.Debug("question", "answer", 42)
 
-	rec.Log()
+	rec.log()
 }
 
 func TestRecorderConditions(t *testing.T) {
@@ -119,4 +145,41 @@ func TestMaxEventGroups(t *testing.T) {
 	if got, want := grps[2].name, "grp4"; got != want {
 		t.Errorf("got [%v]:%T want [%v]:%T", got, got, want, want)
 	}
+}
+
+func TestSnapshotAttrs(t *testing.T) {
+	attrs := map[string]any{
+		"invalid": TestSnapshotAttrs,
+	}
+	m := snapshotAttrs(attrs)
+	k := m["marshal.error"]
+	if k == nil {
+		t.Errorf("missing marshal.error")
+	}
+}
+
+func TestRemoveOldestEventGroup(t *testing.T) {
+	rec := NewRecorder()
+	rec.Record(slog.Default().Handler(), slog.LevelDebug, "", "hello", nil)
+	rec.Record(slog.Default().Handler(), slog.LevelDebug, "say", "hello", nil)
+	rec.removeOldestEventGroup()
+	if got, want := len(rec.events), 1; got != want {
+		t.Errorf("got [%v:%T] want [%v:%T]", got, got, want, want)
+	}
+
+	rec.Record(slog.Default().Handler(), slog.LevelDebug, "grp", "world", nil)
+	rec.Record(slog.Default().Handler(), slog.LevelDebug, "", "world", nil)
+	rec.removeOldestEventGroup()
+	if got, want := len(rec.events), 2; got != want {
+		t.Errorf("got [%v:%T] want [%v:%T]", got, got, want, want)
+	}
+}
+func TestStop(t *testing.T) {
+	rec := NewRecorder()
+	rec.stop()
+	rec.Record(slog.Default().Handler(), slog.LevelDebug, "", "hello", nil)
+	if got, want := len(rec.events), 0; got != want {
+		t.Errorf("got [%v:%T] want [%v:%T]", got, got, want, want)
+	}
+
 }
