@@ -41,6 +41,7 @@ func main() {
 	// serve do on /do
 	http.HandleFunc("/do", do)
 	http.HandleFunc("/err", err)
+	http.HandleFunc("/hidden", hidden)
 
 	// serve captured events
 	http.Handle("/nanny", nanny.NewBrowser(rec, nanny.WithPageSize(10)))
@@ -61,6 +62,7 @@ func main() {
 	slog.Info("to stop recording, open", "url", "http://localhost:8080/nanny?do=stop")
 	slog.Info("to resume recording, open", "url", "http://localhost:8080/nanny?do=resume")
 	slog.Info("to flush recorded events, open", "url", "http://localhost:8080/nanny?do=flush")
+	slog.Info("to simulate log with debug and trace, open", "url", "http://localhost:8080/hidden")
 	slog.Info("to simulate log on error, open", "url", "http://localhost:8080/err")
 
 	// start http server
@@ -126,9 +128,17 @@ func internalDo(parentLogger *slog.Logger) {
 func err(w http.ResponseWriter, r *http.Request) {
 	lg := slog.Default().With(eventGroupMarker, fmt.Sprintf("%d:err", newRequestID()))
 
-	lg.Info("info")
+	lg.Info("any debug or trace events that are recorded for this group will be shown in the output when an error occurs")
 	lg.Debug("debug")
 	nanny.Trace(lg, "trace")
 	lg.Warn("warn")
 	lg.Error("error")
+}
+
+func hidden(w http.ResponseWriter, r *http.Request) {
+	lg := slog.Default().With(eventGroupMarker, fmt.Sprintf("%d:hidden", newRequestID()))
+
+	lg.Info("debug or trace events are recorded but not shown in the output")
+	lg.Debug("debug")
+	nanny.Trace(lg, "trace")
 }
