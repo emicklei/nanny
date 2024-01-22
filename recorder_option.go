@@ -38,6 +38,8 @@ func (o RecorderOptions) postRecordedEventBy(r *recorder) {
 				// no clean up, remove last event, which always saves memory
 				r.removeFirstEvent()
 				mem = r.computeEventsMemory()
+			} else {
+				mem = newMem
 			}
 		}
 		return
