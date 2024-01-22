@@ -50,7 +50,7 @@ func (o RecorderOptions) postRecordedEventBy(r *recorder) {
 	}
 	if o.MaxEvents > 0 {
 		if len(r.events) > o.MaxEvents {
-			r.events = r.events[1:]
+			r.removeFirstEvent()
 		}
 		return
 	}
