@@ -40,22 +40,13 @@ Then after starting your HTTP service, you can access `/nanny` to see and explor
 Events can be grouped e.g. by function name or for the processing of a specific HTTP request.
 
 ```go
-	l := slog.Default().With("func", "myFunctionName")
+	l := slog.Default().With("trace-id", "some-correlation-value")
 	l.Debug("var", "key", "value")
 ```
 
-Here `func` is the default event group marker.
-You can change the group keys to whatever you want using the RecorderOption `WithGroupMarkers`.
-
-## log event groups on error
-
-With this option, if an Error event is recorded then all leading debug and trace events in the same group are logger first.
-
-```go
-	r := nanny.NewRecorder(nanny.WithLogEventGroupOnError(true))
-	...
-```
-
+Here `trace-id` is the default event group marker.
+You can change the group keys to whatever you want using the RecorderOptions `GroupMarkers`.
+ 
 ## sample record served as JSON
 
 Access the events via `/nanny?do=events`.

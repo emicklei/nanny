@@ -27,10 +27,10 @@ func main() {
 
 	// create recorder
 	// record max 100 events
-	rec := nanny.NewRecorder(
-		nanny.WithLogEventGroupOnError(true),
-		nanny.WithMaxEventGroups(10),
-		nanny.WithGroupMarkers(eventGroupMarker))
+	rec := nanny.NewRecorder(nanny.RecorderOptions{
+		GroupMarkers:   []string{eventGroupMarker},
+		MaxEventGroups: 10,
+	})
 
 	// fallback logger (cannot be the default handler)
 	txt := slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{Level: slog.LevelInfo})

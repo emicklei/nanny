@@ -52,14 +52,14 @@ func TestRecorderStopResumeFlush(t *testing.T) {
 
 func TestRecorderLogEventGroupOnError(t *testing.T) {
 	h := slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{})
-	rec := NewRecorder(WithLogEventGroupOnError(true))
+	rec := NewRecorder()
 	rec.Record(h, slog.LevelDebug, "", "ungrouped msg", nil)
 	rec.Record(h, slog.LevelDebug, "grp", "msg", nil)
 	rec.Record(h, slog.LevelError, "grp", "bummer!", nil)
 }
 
 func TestGroupMarker(t *testing.T) {
-	rec := NewRecorder(WithGroupMarkers("grp"))
+	rec := NewRecorder(RecorderOptions{GroupMarkers: []string{"grp"}})
 	l := slog.New(NewLogHandler(rec, slog.Default().Handler(), slog.LevelDebug))
 
 	g := l.With("func", "TestGroupMarker")
@@ -125,8 +125,10 @@ func TestRecorderConditions(t *testing.T) {
 }
 
 func TestMaxEventGroups(t *testing.T) {
-	rec := NewRecorder()
-	rec.retentionStrategy = maxEventGroupsStrategy{maxEventGroups: 2, maxEvents: 1000}
+	rec := NewRecorder(RecorderOptions{
+		MaxEvents:      1000,
+		MaxEventGroups: 2,
+	})
 	for i := 0; i < 5; i++ {
 		for j := 0; j < 5; j++ {
 			rec.Record(slog.Default().Handler(), slog.LevelDebug, fmt.Sprintf("grp%d", i), fmt.Sprintf("msg%d", j), nil)

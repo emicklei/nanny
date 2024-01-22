@@ -67,7 +67,7 @@ func (h *SlogHandler) WithAttrs(attrs []slog.Attr) slog.Handler {
 	// check for groupin request
 	// no nesting of groups because of potential multiple markers
 	if h.group == "" {
-		if m, v := findGroupMarkerAndValue(attrs, h.recorder.groupMarkers); v != "" {
+		if m, v := findGroupMarkerAndValue(attrs, h.recorder.options.GroupMarkers); v != "" {
 			gh := NewLogHandler(h.recorder, h.handler.WithAttrs(attrs), h.level)
 			gh.attrGroup = h.attrGroup
 			copyAttrs := make([]slog.Attr, 0, len(attrs)+len(h.attrs))
