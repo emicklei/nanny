@@ -102,6 +102,7 @@
 		tr.summary.level-warn {
 			background-color: rgb(247, 224, 181);
 		}
+
 		tr.summary.level-error {
 			background-color: rgb(248, 185, 185);
 		}
@@ -187,6 +188,7 @@
 			border-radius: 4px;
 			padding: 4px 8px;
 		}
+
 		#filters .remove {
 			border: none;
 			font-weight: bold;
@@ -207,7 +209,7 @@
 			<tbody>
 				<tr class="summary">
 					<td class="toggler">
-						<div>&#65310;</div>
+						<div>⏵︎</div>
 					</td>
 					<td data-field="t"></td>
 					<td data-field="l" data-label="level" class="filter link"></td>
@@ -467,7 +469,7 @@
 			document.querySelectorAll("#filters .button").forEach((each) => {
 				const filterName = each.getAttribute("data-filter");
 				const index = filtersInUse.indexOf(filterName);
-				if(index >= 0) {
+				if (index >= 0) {
 					// Update filter value (just in case it changed)
 					each.querySelector(".label").textContent = globals.filters[filterName];
 

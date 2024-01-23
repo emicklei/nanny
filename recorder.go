@@ -16,14 +16,12 @@ var eventPool = sync.Pool{
 }
 
 type recorder struct {
-	mutex                sync.RWMutex
-	events               []*Event
-	retentionStrategy    RetentionStrategy
-	groupMarkers         []string
-	groupSet             map[string]bool
-	stats                *recordingStats
-	isRecording          bool
-	logEventGroupOnError bool
+	mutex       sync.RWMutex
+	events      []*Event
+	options     RecorderOptions
+	groupSet    map[string]bool
+	stats       *recordingStats
+	isRecording bool
 }
 
 type recordingStats struct {
@@ -31,58 +29,21 @@ type recordingStats struct {
 	Count   int64
 }
 
-type RecorderOption func(*recorder)
-
-func WithMaxEvents(maxEvents int) RecorderOption {
-	return func(r *recorder) {
-		if r.retentionStrategy != nil {
-			if rs, ok := r.retentionStrategy.(maxEventGroupsStrategy); ok {
-				rs.maxEvents = maxEvents
-				r.retentionStrategy = rs
-				return
-			}
-		}
-		r.retentionStrategy = maxEventsStrategy{maxEvents: maxEvents}
-	}
-}
-
-func WithMaxEventGroups(maxGroups int) RecorderOption {
-	return func(r *recorder) {
-		r.retentionStrategy = maxEventGroupsStrategy{
-			maxEventGroups: maxGroups,
-			maxEvents:      1000,
-		}
-	}
-}
-
-func WithGroupMarkers(markers ...string) RecorderOption {
-	return func(r *recorder) {
-		r.groupMarkers = markers
-	}
-}
-
-func WithLogEventGroupOnError(enabled bool) RecorderOption {
-	return func(r *recorder) {
-		r.logEventGroupOnError = enabled
-	}
-}
-
-func NewRecorder(opts ...RecorderOption) *recorder {
+func NewRecorder(opts ...RecorderOptions) *recorder {
 	r := &recorder{
-		mutex:        sync.RWMutex{},
-		events:       []*Event{},
-		groupMarkers: []string{"func"},
-		groupSet:     map[string]bool{},
+		mutex:    sync.RWMutex{},
+		events:   []*Event{},
+		groupSet: map[string]bool{},
 		stats: &recordingStats{
 			Started: time.Now(),
 			Count:   0,
 		},
-		isRecording:          true,
-		logEventGroupOnError: false,
-		retentionStrategy:    maxEventsStrategy{maxEvents: 100},
+		isRecording: true,
 	}
-	for _, opt := range opts {
-		opt(r)
+	if len(opts) > 0 {
+		r.options = opts[0]
+	} else {
+		r.options = defaultOptions
 	}
 	return r
 }
@@ -106,10 +67,10 @@ func (r *recorder) Record(fallback slog.Handler, level slog.Level, group, messag
 		// update count cache
 		r.groupSet[group] = true
 	}
-	r.retentionStrategy.PostRecordedEventBy(r)
+	r.options.postRecordedEventBy(r)
 	r.mutex.Unlock()
 
-	if level >= slog.LevelError && r.logEventGroupOnError {
+	if level >= slog.LevelError && r.options.LogEventGroupOnError {
 		r.logEventGroup(fallback, group)
 	}
 }
@@ -221,6 +182,16 @@ func (r *recorder) buildGroups(list []*Event) []eventGroup {
 		}
 	}
 	return groups
+}
+
+// pre: mutex lock is active
+func (r *recorder) removeFirstEvent() {
+	if len(r.events) == 0 {
+		return
+	}
+	last := r.events[len(r.events)-1]
+	r.events = r.events[1:]
+	eventPool.Put(last)
 }
 
 // pre: mutex lock is active
