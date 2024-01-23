@@ -8,23 +8,19 @@ import (
 
 type Browser struct {
 	recorder *recorder
-	pageSize int
+	options  BrowserOptions
 }
 
-type BrowserOption func(b *Browser)
-
-func WithPageSize(size int) BrowserOption {
-	return func(b *Browser) {
-		b.pageSize = size
-	}
+type BrowserOptions struct {
+	PageSize int
 }
 
-func NewBrowser(rec *recorder, opts ...BrowserOption) *Browser {
-	b := &Browser{
-		pageSize: 1000,
-		recorder: rec}
-	for _, opt := range opts {
-		opt(b)
+func NewBrowser(rec *recorder, opts ...BrowserOptions) *Browser {
+	b := &Browser{recorder: rec}
+	if len(opts) > 0 {
+		b.options = opts[0]
+	} else {
+		b.options = BrowserOptions{PageSize: 100}
 	}
 	return b
 }
@@ -52,6 +48,7 @@ func (b *Browser) serveEvents(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("x-nanny-stats-memory-bytes", fmt.Sprintf("%d", b.recorder.computeEventsMemory()))
 	w.Header().Set("Content-Type", "application/json")
 	w.Header().Set("x-nanny-version", Version)
+	w.Header().Set("x-nanny-page-size", fmt.Sprintf("%d", b.options.PageSize))
 	enc := json.NewEncoder(w)
 	enc.SetIndent("", "  ")
 	enc.Encode(b.recorder.events)

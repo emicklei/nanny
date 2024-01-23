@@ -66,7 +66,7 @@ func SetupDefault() {
 	rec := NewRecorder(defaultOptions)
 	reclog := slog.New(NewLogHandler(rec, slog.Default().Handler(), LevelTrace))
 	slog.SetDefault(reclog)
-	http.Handle("/nanny", NewBrowser(rec, WithPageSize(100)))
+	http.Handle("/nanny", NewBrowser(rec, BrowserOptions{PageSize: 100}))
 }
 
 func (e *Event) computeMemory() {

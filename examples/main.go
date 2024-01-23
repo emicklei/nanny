@@ -44,7 +44,7 @@ func main() {
 	http.HandleFunc("/hidden", hidden)
 
 	// serve captured events
-	http.Handle("/nanny", nanny.NewBrowser(rec, nanny.WithPageSize(10)))
+	http.Handle("/nanny", nanny.NewBrowser(rec, nanny.BrowserOptions{PageSize: 10}))
 
 	slog.Info("generating events...", "N", *N)
 
