@@ -29,3 +29,11 @@ func TestLogHandler(t *testing.T) {
 	fmt.Println("recorded log:")
 	r.log()
 }
+
+func TestHandlerOnDefault(t *testing.T) {
+	r := NewRecorder()
+	h := NewLogHandler(r, slog.Default().Handler(), slog.LevelInfo)
+	slog.SetDefault(slog.New(h))
+	// TODO check for WARN
+	slog.Log(context.TODO(), slog.LevelInfo, "info")
+}

@@ -4,6 +4,8 @@ import (
 	"context"
 	"fmt"
 	"log/slog"
+	"os"
+	"strings"
 )
 
 type SlogHandler struct {
@@ -16,11 +18,22 @@ type SlogHandler struct {
 }
 
 func NewLogHandler(recorder *recorder, passThroughHandler slog.Handler, level slog.Level) *SlogHandler {
+	if !canUseHandler(passThroughHandler) {
+		slog.Warn("cannot install nanny handler on nil or default slog handler, using simple text handler on info instead")
+		passThroughHandler = slog.NewTextHandler(os.Stderr, &slog.HandlerOptions{Level: slog.LevelInfo})
+	}
 	return &SlogHandler{
 		recorder: recorder,
 		handler:  passThroughHandler,
 		level:    level,
 	}
+}
+
+func canUseHandler(handler slog.Handler) bool {
+	if handler == nil {
+		return false
+	}
+	return strings.HasSuffix(fmt.Sprintf("%T", handler), "*slog.defaultHander")
 }
 
 // Enabled implements slog.Handler.
