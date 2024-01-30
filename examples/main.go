@@ -44,7 +44,7 @@ func main() {
 	http.HandleFunc("/hidden", hidden)
 
 	// serve captured events
-	http.Handle("/nanny", nanny.NewBrowser(rec, nanny.BrowserOptions{PageSize: 10}))
+	http.Handle("/nanny", nanny.NewBrowser(rec, nanny.BrowserOptions{PageSize: 10, PageTitle: "Demo Nanny"}))
 
 	slog.Info("generating events...", "N", *N)
 
@@ -103,7 +103,9 @@ func handleDo() {
 	// modify it
 	bike.Brand = "Specialized"
 	bike.Year = "2018"
-	ag.Info("two attributes in attr group in event group", "bike", bike, "color", "red")
+	ag.Info("two attributes in attr group in event group", "bike", bike, "color", "red", "multiline", `one line
+	two lines
+	three lines`)
 
 	internalDo(glog)
 

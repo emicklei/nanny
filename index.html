@@ -254,7 +254,7 @@
 		<span>monitored: <span class="highlight" data-field="statsCount"></span>,</span>
 		<span>since: <span data-field="statsSince"></span>,</span>
 		<span>memory: <span class="highlight" data-field="statsMemoryPretty"></span>,</span>
-		<span data-field="version"></span>
+		<span>nanny: <span data-field="version"></span></span>
 
 	</div>
 	<div id="filters"></div>
@@ -353,6 +353,9 @@
 					globals.statsSince = d.toLocaleString();
 					globals.statsMemoryPretty = humanFileSize(response.headers.get('x-nanny-stats-memory-bytes'));
 					globals.version = response.headers.get('x-nanny-version');
+					// conditionally set title
+					let title = response.headers.get('x-nanny-page-title');
+					if (title != "") document.title = title;
 					return response.json();
 				})
 				.then((data) => {

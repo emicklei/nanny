@@ -12,7 +12,8 @@ type Browser struct {
 }
 
 type BrowserOptions struct {
-	PageSize int
+	PageSize  int
+	PageTitle string
 }
 
 func NewBrowser(rec *recorder, opts ...BrowserOptions) *Browser {
@@ -49,6 +50,7 @@ func (b *Browser) serveEvents(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	w.Header().Set("x-nanny-version", Version)
 	w.Header().Set("x-nanny-page-size", fmt.Sprintf("%d", b.options.PageSize))
+	w.Header().Set("x-nanny-page-title", b.options.PageTitle)
 	enc := json.NewEncoder(w)
 	enc.SetIndent("", "  ")
 	enc.Encode(b.recorder.events)
