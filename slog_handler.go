@@ -33,7 +33,8 @@ func canUseHandler(handler slog.Handler) bool {
 	if handler == nil {
 		return false
 	}
-	return strings.HasSuffix(fmt.Sprintf("%T", handler), "*slog.defaultHander")
+	typeName := fmt.Sprintf("%T", handler)
+	return !strings.HasSuffix(typeName, "*slog.defaultHandler")
 }
 
 // Enabled implements slog.Handler.
