@@ -1,9 +1,10 @@
+<!DOCTYPE html>
 <html>
 
 <head>
 	<title>Nanny</title>
 	<style>
-		* {
+		*, *::before, *::after {
 			box-sizing: border-box;
 		}
 
@@ -45,6 +46,20 @@
 
 		th:last-child {
 			border-top-right-radius: 4px;
+		}
+
+		select {
+			appearance: none;
+			background-color: transparent;
+			border: none;
+			padding: 0 1em 0 0;
+			margin: 0;
+			width: 100%;
+			font-family: inherit;
+			font-size: inherit;
+			cursor: inherit;
+			line-height: inherit;
+			outline: none;
 		}
 
 		/*
@@ -262,7 +277,16 @@
 			<tr>
 				<th style="width: 1.5em;">&nbsp;</th>
 				<th style="width: 7em;">Time</th>
-				<th style="width: 1.5em;">L</th>
+    		<th style="width: 1.5em;">
+					<select id="filter-log-level">
+						<option value="T" data-label="Trace">L</option>
+						<option value="D" data-label="Debug">L</option>
+						<option value="I" data-label="Info">L</option>
+						<option value="W" data-label="Warning">L</option>
+						<option value="E" data-label="Error">L</option>
+						<option value="F" data-label="Fatal">L</option>
+					</select>
+				</th>
 				<th style="width: 15em;">Group</th>
 				<th style="width: 20em;">Message</th>
 				<th>Attributes</th>
@@ -605,6 +629,24 @@
 			const lastPageLink = document.getElementById("last-page-link");
 			lastPageLink.addEventListener("click", () => {
 				gotoLastPage();
+			});
+
+			// Add click and change handler to filter log level
+			const filterLogLevelSelect = document.getElementById("filter-log-level");
+			filterLogLevelSelect.addEventListener("pointerdown", () => {
+				// When clicked replace dummy options with actual label
+				filterLogLevelSelect.querySelectorAll("option").forEach((each) => {
+					console.log("Replace content");
+					each.textContent = each.getAttribute("data-label");
+				});
+			});
+			filterLogLevelSelect.addEventListener("change", () => {
+				// When value chosen replace options with dummy value (which shows in table header)
+				filterLogLevelSelect.querySelectorAll("option").forEach((each) => {
+					console.log("Restore content");
+					each.textContent = "L";
+				});
+				setFilterParam("l", filterLogLevelSelect.value);
 			});
 		}
 
