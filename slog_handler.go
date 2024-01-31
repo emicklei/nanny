@@ -19,7 +19,7 @@ type SlogHandler struct {
 
 func NewLogHandler(recorder *recorder, passThroughHandler slog.Handler, level slog.Level) *SlogHandler {
 	if !canUseHandler(passThroughHandler) {
-		slog.Warn("cannot install nanny handler on nil or default slog handler, using simple text handler on info instead")
+		slog.Warn("cannot install nanny handler on nil or default slog handler, using simple text handler on info instead", "handler", passThroughHandler)
 		passThroughHandler = slog.NewTextHandler(os.Stderr, &slog.HandlerOptions{Level: slog.LevelInfo})
 	}
 	return &SlogHandler{
