@@ -18,6 +18,8 @@
 		}
 
 		table {
+			table-layout: fixed;
+			width: 100%;
 			border-spacing: 0;
 		}
 
@@ -129,6 +131,8 @@
 		tr.content td {
 			white-space: pre;
 			padding-bottom: 1em;
+			overflow-x: scroll;
+			text-overflow: unset;
 		}
 
 		td.toggler div {
@@ -167,6 +171,9 @@
 		td,
 		th {
 			padding: 4px;
+			overflow: hidden;
+			white-space: nowrap;
+			text-overflow: ellipsis;
 		}
 
 		#controls .highlight,
@@ -253,11 +260,11 @@
 	<table class="sortable">
 		<thead>
 			<tr>
-				<th>&nbsp;</th>
-				<th>Time</th>
-				<th>L</th>
-				<th>Group</th>
-				<th>Message</th>
+				<th style="width: 1.5em;">&nbsp;</th>
+				<th style="width: 7em;">Time</th>
+				<th style="width: 1.5em;">L</th>
+				<th style="width: 15em;">Group</th>
+				<th style="width: 20em;">Message</th>
 				<th>Attributes</th>
 			</tr>
 		</thead>
