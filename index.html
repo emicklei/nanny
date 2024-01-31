@@ -187,14 +187,23 @@
 			border: 1px solid #666;
 			border-radius: 4px;
 			padding: 4px 8px;
+			vertical-align: middle;
 		}
 
 		#filters .remove {
+			width: 1.6em;
+			padding: 0;
+			margin-left: 4px;
 			border: none;
 			font-weight: bold;
 			color: #000;
 			background-color: transparent;
+			vertical-align: middle;
 			cursor: pointer;
+		}
+		#filters .remove svg {
+			stroke: #174EA6;
+			stroke-width: 2px;
 		}
 
 		td[data-field="m"] {
@@ -209,7 +218,7 @@
 			<tbody>
 				<tr class="summary">
 					<td class="toggler">
-						<div>⏵︎</div>
+						<div><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><use href="#triangle"></use></svg></div>
 					</td>
 					<td data-field="t"></td>
 					<td data-field="l" data-label="level" class="filter link"></td>
@@ -226,8 +235,20 @@
 		<span class="button">
 			<span class="label"></span>:
 			<span class="value"></span>
-			<button class="remove">❌</button>
+			<button class="remove"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><use href="#cross"></use></svg></button>
 		</span>
+		<svg>
+			<defs>
+				<!-- All icons/symbols have 24x24 resolution -->
+				<g id="triangle">
+					<path d="M3,3L3,21L21,12"></path>
+				</g>
+				<g id="cross">
+					<line x1="3" y1="3" x2="19" y2="19"></line>
+					<line x1="19" y1="3" x2="3" y2="19"></line>
+				</g>
+			</defs>
+		</svg>
 	</defs>
 	<table class="sortable">
 		<thead>
