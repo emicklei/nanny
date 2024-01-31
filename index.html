@@ -243,9 +243,11 @@
 		<tbody class="events"></tbody>
 	</table>
 	<div id="controls">
+		<span id="first-page-link" class="bare link">●</span>
 		<span id="prev-page-link" class="bare link">◀</span>
 		<span data-field="currentPageIndex"></span>
 		<span id="next-page-link" class="bare link">▶</span>
+		<span id="last-page-link" class="bare link">◉</span>
 		<span><a id="reset-link" class="link">Reset filter</a></span>
 		<span id="filter-count">filtered: <span class="highlight" data-field="filteredEventCount"></span>,</span>
 		<span>total: <span class="highlight" data-field="totalEventCount"></span>,</span>
@@ -553,6 +555,12 @@
 				resetFilterParams();
 			});
 
+			// Add click handler to first page link
+			const firstPageLink = document.getElementById("first-page-link");
+			firstPageLink.addEventListener("click", () => {
+				gotoFirstPage();
+			});
+
 			// Add click handler to previous page link
 			const previousPageLink = document.getElementById("prev-page-link");
 			previousPageLink.addEventListener("click", () => {
@@ -563,6 +571,12 @@
 			const nextPageLink = document.getElementById("next-page-link");
 			nextPageLink.addEventListener("click", () => {
 				switchPage(+1);
+			});
+
+			// Add click handler to last page link
+			const lastPageLink = document.getElementById("last-page-link");
+			lastPageLink.addEventListener("click", () => {
+				gotoLastPage();
 			});
 		}
 
@@ -615,6 +629,14 @@
 			} else if (globals.currentPageIndex > globals.maxPageIndex) {
 				globals.currentPageIndex = globals.maxPageIndex;
 			}
+			updatePaging();
+		}
+		function gotoFirstPage() {
+			globals.currentPageIndex = 0;
+			updatePaging();
+		}
+		function gotoLastPage() {
+			globals.currentPageIndex = globals.maxPageIndex;
 			updatePaging();
 		}
 
