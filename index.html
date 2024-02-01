@@ -4,7 +4,9 @@
 <head>
 	<title>Nanny</title>
 	<style>
-		*, *::before, *::after {
+		*,
+		*::before,
+		*::after {
 			box-sizing: border-box;
 		}
 
@@ -223,6 +225,7 @@
 			vertical-align: middle;
 			cursor: pointer;
 		}
+
 		#filters .remove svg {
 			stroke: #174EA6;
 			stroke-width: 2px;
@@ -240,7 +243,9 @@
 			<tbody>
 				<tr class="summary">
 					<td class="toggler">
-						<div><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><use href="#triangle"></use></svg></div>
+						<div><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+								<use href="#triangle"></use>
+							</svg></div>
 					</td>
 					<td data-field="t"></td>
 					<td data-field="l" data-label="level" class="filter link"></td>
@@ -257,7 +262,9 @@
 		<span class="button">
 			<span class="label"></span>:
 			<span class="value"></span>
-			<button class="remove"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><use href="#cross"></use></svg></button>
+			<button class="remove"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+					<use href="#cross"></use>
+				</svg></button>
 		</span>
 		<svg>
 			<defs>
@@ -277,7 +284,7 @@
 			<tr>
 				<th style="width: 1.5em;">&nbsp;</th>
 				<th style="width: 7em;">Time</th>
-    			<th style="width: 1.5em; background-color: #a09f9f">
+				<th style="width: 1.5em; background-color: #a09f9f">
 					<select id="filter-log-level">
 						<option value="T" data-label="Trace">L</option>
 						<option value="D" data-label="Debug">L</option>
@@ -294,11 +301,11 @@
 		<tbody class="events"></tbody>
 	</table>
 	<div id="controls">
-		<span id="first-page-link" class="bare link">●</span>
+		<span id="first-page-link" class="bare link" style="font-size:x-large;vertical-align:middle;">⏮</span>
 		<span id="prev-page-link" class="bare link">◀</span>
 		<span data-field="currentPageIndex"></span>
 		<span id="next-page-link" class="bare link">▶</span>
-		<span id="last-page-link" class="bare link">◉</span>
+		<span id="last-page-link" class="bare link" style="font-size:x-large;vertical-align:middle;">⏭</span>
 		<span><a id="reset-link" class="link">Reset filter</a></span>
 		<span id="filter-count">filtered: <span class="highlight" data-field="filteredEventCount"></span>,</span>
 		<span>total: <span class="highlight" data-field="totalEventCount"></span>,</span>
