@@ -1,3 +1,4 @@
 package nanny
 
-var Version = "v1.15.5"
+// because of a typo, versions have a gap between 1.15.3 and 1.50.0
+var Version = "v1.51.0"
