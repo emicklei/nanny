@@ -463,7 +463,7 @@
 
 				// Add content row, check if it has attributes (and enable toggler if so)
 				const newContentRow = contentRow.cloneNode(true);	// Deep clone copy
-				if (Object.keys(event.a).length > 0) {
+				if (needsJSONContentRow(event)) {
 					// Add the JSON representation of the attributes to the content row
 					newContentRow.lastElementChild.textContent = JSON.stringify(event.a, null, "\t");
 				} else {
@@ -476,6 +476,25 @@
 
 			// Update filters (which will update paging and controls)
 			updateFilters();
+		}
+
+		// returns whether to add a text content row with toggler
+		function needsJSONContentRow(event) {
+			let keycount = 0;
+			for (const key in event.a) {
+				let val = event.a[key];
+				if (typeof val === 'object') {
+					// if at least one non-empty object as attr value
+					if (Object.keys(val).length > 0) {
+						return true
+					}
+				}
+				keycount++;
+				if (keycount > 10) {
+					return true
+				}
+			}
+			return false;
 		}
 
 		// Update the controls
