@@ -10,6 +10,7 @@ import (
 	"net/http"
 	"os"
 	"sync/atomic"
+	"time"
 
 	"github.com/emicklei/nanny"
 )
@@ -21,6 +22,7 @@ type Bike struct {
 const eventGroupMarker = "httpHandleFunc"
 
 var N = flag.Int("N", 10, "number of events to create")
+var L = flag.Bool("loop", false, "continuously create events")
 
 func main() {
 	flag.Parse()
@@ -64,6 +66,17 @@ func main() {
 	slog.Info("to flush recorded events, open", "url", "http://localhost:8080/nanny?do=flush")
 	slog.Info("to simulate log with debug and trace, open", "url", "http://localhost:8080/hidden")
 	slog.Info("to simulate log on error, open", "url", "http://localhost:8080/err")
+
+	if *L {
+		go func() {
+			c := 0
+			for {
+				slog.Info("time passed again", "count", c)
+				time.Sleep(1 * time.Second)
+				c++
+			}
+		}()
+	}
 
 	// start http server
 	http.ListenAndServe(":8080", http.DefaultServeMux)

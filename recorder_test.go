@@ -1,6 +1,7 @@
 package nanny
 
 import (
+	"context"
 	"fmt"
 	"log/slog"
 	"os"
@@ -184,4 +185,50 @@ func TestStop(t *testing.T) {
 		t.Errorf("got [%v:%T] want [%v:%T]", got, got, want, want)
 	}
 
+}
+
+// log outputs all events using the TextHandler
+func (r *recorder) log() {
+	// make copy so new Record calls are not blocked
+	list := r.snapshotEvents()
+	// do not use default handler because that could be a recording one
+	th := slog.NewTextHandler(os.Stdout, nil)
+	for _, eg := range r.buildGroups(list) {
+		for _, ev := range eg.events {
+			lr := slog.NewRecord(ev.Time, ev.Level, ev.Message, 0)
+			for k, v := range ev.Attrs {
+				lr.AddAttrs(slog.Any(k, v))
+			}
+			th.Handle(context.Background(), lr)
+		}
+	}
+}
+
+type eventGroup struct {
+	name   string
+	events []*Event
+}
+
+// order of events in group are preserved, groups are also in order
+// Pre: mutex has read lock
+func (r *recorder) buildGroups(list []*Event) []eventGroup {
+	groups := []eventGroup{{}} // for the no group
+	for _, each := range list {
+		// lookup group
+		found := false
+		for g, other := range groups {
+			if other.name == each.Group {
+				groups[g].events = append(groups[g].events, each)
+				found = true
+				break
+			}
+		}
+		if !found {
+			groups = append(groups, eventGroup{
+				name:   each.Group,
+				events: []*Event{each},
+			})
+		}
+	}
+	return groups
 }
