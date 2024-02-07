@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"log/slog"
-	"os"
 	"sync"
 	"time"
 )
@@ -95,23 +94,6 @@ func (r *recorder) logEventGroup(handler slog.Handler, group string) {
 	}
 }
 
-// log outputs all events using the TextHandler
-func (r *recorder) log() {
-	// make copy so new Record calls are not blocked
-	list := r.snapshotEvents()
-	// do not use default handler because that could be a recording one
-	th := slog.NewTextHandler(os.Stdout, nil)
-	for _, eg := range r.buildGroups(list) {
-		for _, ev := range eg.events {
-			lr := slog.NewRecord(ev.Time, ev.Level, ev.Message, 0)
-			for k, v := range ev.Attrs {
-				lr.AddAttrs(slog.Any(k, v))
-			}
-			th.Handle(context.Background(), lr)
-		}
-	}
-}
-
 func (r *recorder) snapshotEvents() []*Event {
 	r.mutex.RLock()
 	defer r.mutex.RUnlock()
@@ -155,43 +137,14 @@ func (r *recorder) computeEventsMemory() (size int64) {
 	return
 }
 
-type eventGroup struct {
-	name   string
-	events []*Event
-}
-
-// order of events in group are preserved, groups are also in order
-// Pre: mutex has read lock
-func (r *recorder) buildGroups(list []*Event) []eventGroup {
-	groups := []eventGroup{{}} // for the no group
-	for _, each := range list {
-		// lookup group
-		found := false
-		for g, other := range groups {
-			if other.name == each.Group {
-				groups[g].events = append(groups[g].events, each)
-				found = true
-				break
-			}
-		}
-		if !found {
-			groups = append(groups, eventGroup{
-				name:   each.Group,
-				events: []*Event{each},
-			})
-		}
-	}
-	return groups
-}
-
 // pre: mutex lock is active
 func (r *recorder) removeFirstEvent() {
 	if len(r.events) == 0 {
 		return
 	}
-	last := r.events[len(r.events)-1]
+	oldest := r.events[0]
 	r.events = r.events[1:]
-	eventPool.Put(last)
+	eventPool.Put(oldest)
 }
 
 // pre: mutex lock is active
