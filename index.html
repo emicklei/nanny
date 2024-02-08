@@ -489,6 +489,10 @@
 						return true
 					}
 				}
+				// trimmed values require content row too
+				if (val.length > globals.attrValueLength) {
+					return true
+				}
 				keycount++;
 				if (keycount > 10) {
 					return true
