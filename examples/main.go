@@ -54,6 +54,7 @@ func main() {
 	for i := 0; i < *N; i++ {
 		handleDo()
 	}
+	slog.Debug("json error", "func", http.HandleFunc)
 
 	// serve
 	slog.Info("to create events, open", "url", "http://localhost:8080/do", "port", 8080)

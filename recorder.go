@@ -3,6 +3,7 @@ package nanny
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"log/slog"
 	"sync"
 	"time"
@@ -178,12 +179,18 @@ func (r *recorder) removeOldestEventGroup() {
 
 func snapshotAttrs(attrs map[string]any) map[string]any {
 	out := make(map[string]any, len(attrs))
-	data, err := json.Marshal(attrs)
-	if err != nil {
-		out["marshal.error"] = err.Error()
-		return out
+	for k, v := range attrs {
+		data, err := json.Marshal(v)
+		if err != nil {
+			// show that there was an error
+			out[k+".json.error"] = err.Error()
+			out[k] = fmt.Sprintf("%#v", v)
+		} else {
+			var vv any
+			// succeeds
+			json.Unmarshal(data, &vv)
+			out[k] = vv
+		}
 	}
-	// always succeeds
-	json.Unmarshal(data, &out)
 	return out
 }
