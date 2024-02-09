@@ -35,6 +35,24 @@ func TestRecorder(t *testing.T) {
 	}
 }
 
+func TestRecorderRemoveFirst(t *testing.T) {
+	rec := NewRecorder()
+	rec.removeFirstEvent()
+	rec.removeOldestEventGroup()
+	rec.Record(slog.Default().Handler(), slog.LevelDebug, "", "msg", map[string]any{})
+	if got, want := len(rec.events), 1; got != want {
+		t.Errorf("got [%v]:%T want [%v]:%T", got, got, want, want)
+	}
+	rec.removeOldestEventGroup()
+	if got, want := len(rec.events), 1; got != want {
+		t.Errorf("got [%v]:%T want [%v]:%T", got, got, want, want)
+	}
+	rec.removeFirstEvent()
+	if got, want := len(rec.events), 0; got != want {
+		t.Errorf("got [%v]:%T want [%v]:%T", got, got, want, want)
+	}
+}
+
 func TestRecorderStopResumeFlush(t *testing.T) {
 	rec := NewRecorder()
 	rec.Record(slog.Default().Handler(), slog.LevelDebug, "grp", "msg", nil)
@@ -155,9 +173,9 @@ func TestSnapshotAttrs(t *testing.T) {
 		"invalid": TestSnapshotAttrs,
 	}
 	m := snapshotAttrs(attrs)
-	k := m["marshal.error"]
+	k := m["invalid.json.error"]
 	if k == nil {
-		t.Errorf("missing marshal.error")
+		t.Errorf("missing marshal.error: %v", m)
 	}
 }
 
