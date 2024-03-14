@@ -134,6 +134,7 @@ func internalDo(parentLogger *slog.Logger) {
 	// start event group
 	glog := parentLogger.With(eventGroupMarker, "internalDo")
 	glog.Info("do internal stuff")
+	glog.Info("null value", "null", nil)
 	glog.Info(`
 	Lorem ipsum is a placeholder text commonly used.
 	`, "content", `

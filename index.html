@@ -483,6 +483,9 @@
 			let keycount = 0;
 			for (const key in event.a) {
 				let val = event.a[key];
+				if (val == null) {
+					continue;
+				}
 				if (typeof val === 'object') {
 					// if at least one non-empty object as attr value
 					if (Object.keys(val).length > 0) {
