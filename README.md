@@ -4,6 +4,7 @@
 
 Records a sliding window of slog events with all attribute values for remote inspection through HTTP.
 
+![browser snapshot](./examples/screenshot.png "Example events")
 
 ## usage
 
