@@ -45,8 +45,9 @@ Events can be grouped e.g. by function name or for the processing of a specific 
 	l.Debug("var", "key", "value")
 ```
 
-Here `trace-id` is the default event group marker.
+Here `trace-id` is a event group marker.
 You can change the group keys to whatever you want using the RecorderOptions `GroupMarkers`.
+Typically, events are grouped by an external identifier such as a request id or message id.
  
 ## sample record served as JSON
 
