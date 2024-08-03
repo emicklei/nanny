@@ -54,7 +54,7 @@ Typically, events are grouped by an external identifier such as a request id or 
 	r := nanny.NewRecorder(nanny.RecorderOptions{
 		MaxEvents: 1000,
 		MaxEventGroups: 100,
-		GroupMarkers:[]string{"trace-id},
+		GroupMarkers:[]string{"trace-id"},
 		LogEventGroupOnError: true,
 	})
 ```
