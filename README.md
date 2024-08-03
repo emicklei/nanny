@@ -2,7 +2,7 @@
 
 [![GoDoc](https://pkg.go.dev/badge/github.com/emicklei/nanny)](https://pkg.go.dev/github.com/emicklei/nanny)
 
-Records a sliding window of slog events with all attribute values for remote inspection through HTTP.
+Records a sliding window of slog events with all log attribute values for remote inspection through HTTP.
 
 ![browser snapshot](./examples/screenshot.png "Example events")
 
@@ -46,8 +46,18 @@ Events can be grouped e.g. by function name or for the processing of a specific 
 ```
 
 Here `trace-id` is a event group marker.
+No group markers are set by default.
 You can change the group keys to whatever you want using the RecorderOptions `GroupMarkers`.
 Typically, events are grouped by an external identifier such as a request id or message id.
+
+```go
+	r := nanny.NewRecorder(nanny.RecorderOptions{
+		MaxEvents: 1000,
+		MaxEventGroups: 100,
+		GroupMarkers:[]string{"trace-id},
+		LogEventGroupOnError: true,
+	})
+```
  
 ## sample record served as JSON
 
