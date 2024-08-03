@@ -97,3 +97,9 @@ Both the `nanny.SlogHandler` and the fallback handler respond to a certain `slog
 If the `nanny.SlogHandler` is enabled for the log level of the record then it is sent to fallback handler.
 If the fallback handler is enabled for the log level of the record then it is sent to the fallback output.
 So if the fallback handler is configured for INFO only then the TRACE and DEBUG records are kept by the `nanny.Recorder` only ; they are not logged to the output of the fallback handler.
+
+## considerations
+
+Current implementation does not work when accessing an HTTP load-balanced setup with > 1 instances. This is because the HTML page and event data is fetched in separate HTTP requests; page can be served by instance 1, data could be served by instance 2.
+
+(c) 2024, http://ernestmicklei.com. MIT License.
