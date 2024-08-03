@@ -30,7 +30,7 @@ or by composing the setup yourself:
 	slog.SetDefault(l)
 
 	// serve the events
-	http.Handle("/nanny", nanny.NewBrowser(rec))
+	http.Handle("/nanny", nanny.NewBrowser(r))
 ```
 
 Then after starting your HTTP service, you can access `/nanny` to see and explore your log events.
