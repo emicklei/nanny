@@ -49,6 +49,7 @@ Here `trace-id` is an event group marker.
 No group markers are set by default.
 You can change the group keys to whatever you want using the RecorderOptions `GroupMarkers`.
 Typically, events are grouped by an external identifier such as a request id or message id.
+When you click on the group name in the log line, all entries are filtered.
 
 ```go
 	r := nanny.NewRecorder(nanny.RecorderOptions{
