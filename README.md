@@ -24,7 +24,10 @@ or by composing the setup yourself:
 	r := nanny.NewRecorder()
 
 	// recorder captures debug and forwards to existing handler
-	l := slog.New(nanny.NewLogHandler(r, slog.Default().Handler(), slog.LevelDebug)) // or nanny.LevelTrace
+	h := nanny.NewLogHandler(r, slog.Default().Handler(), slog.LevelDebug) // or nanny.LevelTrace
+
+	// new logger using the nanny handler
+	l := slog.New(h) 
 	
 	// replace the default logger
 	slog.SetDefault(l)
