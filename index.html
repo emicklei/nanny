@@ -464,8 +464,26 @@
 				// Add content row, check if it has attributes (and enable toggler if so)
 				const newContentRow = contentRow.cloneNode(true);	// Deep clone copy
 				if (needsJSONContentRow(event)) {
-					// Add the JSON representation of the attributes to the content row
-					newContentRow.lastElementChild.textContent = JSON.stringify(event.a, null, "\t");
+					// Add a Table representation of the attributes to the content row
+					const inspector = document.createElement("table");
+					for (const key in event.a) {						
+						let inspectRow = document.createElement("tr");
+						// key
+						let inspectCellKey = document.createElement("td");
+						inspectCellKey.textContent = key;
+						inspectRow.appendChild(inspectCellKey);
+						// val 
+						let val = event.a[key];
+						let inspectCellVal = document.createElement("td");
+						if (typeof val === 'object') {
+							inspectCellVal.textContent = JSON.stringify(val);
+						} else {
+							inspectCellVal.textContent = val;
+						}
+						inspectRow.appendChild(inspectCellVal);
+						inspector.appendChild(inspectRow);						
+					}
+					newContentRow.appendChild(inspector);															
 				} else {
 					// Remove toggler and the visible triangle of toggler
 					cells[0].classList.remove("toggler");
