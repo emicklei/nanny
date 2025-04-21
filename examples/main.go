@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	"errors"
 	"flag"
 	"fmt"
@@ -110,6 +111,9 @@ func handleDo() {
 
 	// attributes without group
 	glog.Info("two attributes", slog.String("bike", "Specialized"), slog.String("size", "29inch"))
+
+	data, _ := json.Marshal([]Bike{bike, bike, bike, bike})
+	glog.Info("json encoded attr value", "json", string(data), "not-json", "{{]]")
 
 	// attribute group within event group
 	ag := glog.WithGroup("myattrs")
