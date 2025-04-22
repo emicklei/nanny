@@ -465,9 +465,10 @@
 				const newContentRow = contentRow.cloneNode(true);	// Deep clone copy
 				if (needsJSONContentRow(event)) {
 					// Add the JSON representation of the attributes to the content row
-					let doc = event.a
+					let doc = event.a;
 					for (const key in doc) {
 						let val = doc[key];
+						// try replace the value with a JSON structure
 						if (typeof val === 'string') {
 							try {
 								let revived = JSON.parse(val);
