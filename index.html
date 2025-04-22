@@ -465,7 +465,19 @@
 				const newContentRow = contentRow.cloneNode(true);	// Deep clone copy
 				if (needsJSONContentRow(event)) {
 					// Add the JSON representation of the attributes to the content row
-					newContentRow.lastElementChild.textContent = JSON.stringify(event.a, null, "\t");
+					let doc = event.a;
+					for (const key in doc) {
+						let val = doc[key];
+						// try replace the value with a JSON structure
+						if (typeof val === 'string') {
+							try {
+								let revived = JSON.parse(val);
+								// replace with structure unless parse failed
+								doc[key] = revived;
+							} catch (e) {}							
+						}
+					}
+					newContentRow.lastElementChild.textContent = JSON.stringify(doc, null, "\t");
 				} else {
 					// Remove toggler and the visible triangle of toggler
 					cells[0].classList.remove("toggler");
