@@ -1,812 +1,953 @@
-<!DOCTYPE html>
+<!doctype html>
 <html>
+    <head>
+        <title>Nanny</title>
+        <style>
+            *,
+            *::before,
+            *::after {
+                box-sizing: border-box;
+            }
 
-<head>
-	<title>Nanny</title>
-	<style>
-		*,
-		*::before,
-		*::after {
-			box-sizing: border-box;
-		}
+            body {
+                font-family: "Open Sans", Tahoma, Geneva, sans-serif;
+                -webkit-font-smoothing: antialiased;
+                -moz-osx-font-smoothing: grayscale;
+            }
 
-		body {
-			font-family: "Open Sans", Tahoma, Geneva, sans-serif;
-			-webkit-font-smoothing: antialiased;
-			-moz-osx-font-smoothing: grayscale;
-		}
+            defs {
+                display: none;
+            }
 
-		defs {
-			display: none;
-		}
+            table {
+                table-layout: fixed;
+                width: 100%;
+                border-spacing: 0;
+            }
 
-		table {
-			table-layout: fixed;
-			width: 100%;
-			border-spacing: 0;
-		}
-
-		/*
+            /*
 			Header row is dark gray with white text.
 		*/
-		thead tr {
-			background-color: #c7c5c5;
-			color: #ffffff;
-		}
+            thead tr {
+                background-color: #c7c5c5;
+                color: #ffffff;
+            }
 
-		th {
-			text-align: left;
-			font-weight: normal;
-		}
+            th {
+                text-align: left;
+                font-weight: normal;
+            }
 
-		/*
+            /*
 		   Header has rounded border on top.
 		*/
-		th:first-child {
-			border-top-left-radius: 4px;
-		}
+            th:first-child {
+                border-top-left-radius: 4px;
+            }
 
-		th:last-child {
-			border-top-right-radius: 4px;
-		}
+            th:last-child {
+                border-top-right-radius: 4px;
+            }
 
-		select {
-			appearance: none;
-			background-color: transparent;
-			border: none;
-			padding: 0 1em 0 0;
-			margin: 0;
-			width: 100%;
-			font-family: inherit;
-			font-size: inherit;
-			cursor: inherit;
-			line-height: inherit;
-			outline: none;
-		}
+            select {
+                appearance: none;
+                background-color: transparent;
+                border: none;
+                padding: 0 1em 0 0;
+                margin: 0;
+                width: 100%;
+                font-family: inherit;
+                font-size: inherit;
+                cursor: inherit;
+                line-height: inherit;
+                outline: none;
+            }
 
-		/*
+            /*
 			All odd rows are gray.
 		*/
-		tbody tr.odd {
-			background-color: #e4e4e4;
-		}
+            tbody tr.odd {
+                background-color: #e4e4e4;
+            }
 
-		/*
+            /*
 		   All rows have a rounded border (only visible for gray ones).
 		*/
-		tbody tr:nth-child(4n + 1) td:first-child {
-			border-top-left-radius: 4px;
-			border-bottom-left-radius: 4px;
-		}
+            tbody tr:nth-child(4n + 1) td:first-child {
+                border-top-left-radius: 4px;
+                border-bottom-left-radius: 4px;
+            }
 
-		tbody tr:nth-child(4n + 1) td:last-child {
-			border-top-right-radius: 4px;
-			border-bottom-right-radius: 4px;
-		}
+            tbody tr:nth-child(4n + 1) td:last-child {
+                border-top-right-radius: 4px;
+                border-bottom-right-radius: 4px;
+            }
 
-		/*
+            /*
 		   Except for top row, which is attached to the header row
 		   and does not have a rounded top border.
 		*/
-		tbody tr:first-child td:first-child {
-			border-top-left-radius: 0;
-		}
+            tbody tr:first-child td:first-child {
+                border-top-left-radius: 0;
+            }
 
-		tbody tr:first-child td:last-child {
-			border-top-right-radius: 0;
-		}
+            tbody tr:first-child td:last-child {
+                border-top-right-radius: 0;
+            }
 
-		/*
+            /*
 		   All content rows (showing JSON) have a rounded bottom border.
 		*/
-		tbody tr:nth-child(4n + 2) td:first-child {
-			border-bottom-left-radius: 4px;
-		}
+            tbody tr:nth-child(4n + 2) td:first-child {
+                border-bottom-left-radius: 4px;
+            }
 
-		tbody tr:nth-child(4n + 2) td:last-child {
-			border-bottom-right-radius: 4px;
-		}
+            tbody tr:nth-child(4n + 2) td:last-child {
+                border-bottom-right-radius: 4px;
+            }
 
-		tr.summary,
-		tr.summary+tr.content {
-			display: none;
-		}
+            tr.summary,
+            tr.summary + tr.content {
+                display: none;
+            }
 
-		tr.summary.filtered.visible,
-		tr.summary.filtered.visible+tr.content {
-			display: revert;
-		}
+            tr.summary.filtered.visible,
+            tr.summary.filtered.visible + tr.content {
+                display: revert;
+            }
 
-		/* Use coloring for different levels */
-		tr.summary.level-warn {
-			background-color: rgb(247, 224, 181);
-		}
+            /* Use coloring for different levels */
+            tr.summary.level-warn {
+                background-color: rgb(247, 224, 181);
+            }
 
-		tr.summary.level-error {
-			background-color: rgb(248, 185, 185);
-		}
+            tr.summary.level-error {
+                background-color: rgb(248, 185, 185);
+            }
 
-		/*
+            /*
 		   If content row is shown, remove rounded bottom border from
 		   summary row, because content (JSON) is attached to this summary row.
 		*/
-		tr.summary.with-content td:first-child {
-			border-bottom-left-radius: 0;
-		}
+            tr.summary.with-content td:first-child {
+                border-bottom-left-radius: 0;
+            }
 
-		tr.summary.with-content td:last-child {
-			border-bottom-right-radius: 0;
-		}
+            tr.summary.with-content td:last-child {
+                border-bottom-right-radius: 0;
+            }
 
-		/*
+            /*
 		   Hide content row if not requested to show it.
 		*/
-		tr.summary.filtered.visible:not(.with-content)+tr.content {
-			display: none;
-		}
-
-		tr.content td {
-			white-space: pre;
-			padding-bottom: 1em;
-			overflow-x: scroll;
-			text-overflow: unset;
-		}
-
-		td.toggler div {
-			width: 1em;
-			height: 1em;
-			cursor: pointer;
-			transform: rotate(0deg);
-			transition: transform .5s ease 0s;
-		}
-
-		tr.with-content td.toggler div {
-			transform: rotate(90deg)translate(0.2em, 0.1em);
-		}
-
-		tr.summary td {
-			white-space: nowrap;
-		}
-
-		td.group:not(:empty) {
-			cursor: pointer;
-		}
-
-		a.link,
-		td.link:hover,
-		span.link:hover {
-			color: #174EA6;
-			cursor: pointer;
-		}
-
-		a:not(.bare).link,
-		td:not(.bare).link:hover,
-		span:not(.bare).link:hover {
-			text-decoration: underline;
-		}
-
-		td,
-		th {
-			padding: 4px;
-			overflow: hidden;
-			white-space: nowrap;
-			text-overflow: ellipsis;
-		}
-
-		#controls .highlight,
-		#filter-count.active {
-			font-weight: bold;
-		}
-
-		#filters:empty {
-			display: none;
-		}
-
-		#filters::before {
-			content: "Applied filters: ";
-		}
-
-		#filters .button {
-			display: inline-block;
-			border: 1px solid #666;
-			border-radius: 4px;
-			padding: 4px 8px;
-			vertical-align: middle;
-		}
-
-		#filters .remove {
-			width: 1.6em;
-			padding: 0;
-			margin-left: 4px;
-			border: none;
-			font-weight: bold;
-			color: #000;
-			background-color: transparent;
-			vertical-align: middle;
-			cursor: pointer;
-		}
-
-		#filters .remove svg {
-			stroke: #174EA6;
-			stroke-width: 2px;
-		}
-
-		td[data-field="m"] {
-			color: #620245;
-		}
-	</style>
-</head>
-
-<body>
-	<defs>
-		<table>
-			<tbody>
-				<tr class="summary">
-					<td class="toggler">
-						<div><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
-								<use href="#triangle"></use>
-							</svg></div>
-					</td>
-					<td data-field="t"></td>
-					<td data-field="l" data-label="level" class="filter link"></td>
-					<td data-field="g" data-label="group" class="filter link"></td>
-					<td data-field="m" data-label="msg" class="filter link"></td>
-					<td data-field="a"></td>
-				</tr>
-				<tr class="content">
-					<td></td>
-					<td colspan="5"></td>
-				</tr>
-			</tbody>
-		</table>
-		<span class="button">
-			<span class="label"></span>:
-			<span class="value"></span>
-			<button class="remove"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
-					<use href="#cross"></use>
-				</svg></button>
-		</span>
-		<svg>
-			<defs>
-				<!-- All icons/symbols have 24x24 resolution -->
-				<g id="triangle">
-					<path d="M3,3L3,21L21,12"></path>
-				</g>
-				<g id="cross">
-					<line x1="3" y1="3" x2="19" y2="19"></line>
-					<line x1="19" y1="3" x2="3" y2="19"></line>
-				</g>
-			</defs>
-		</svg>
-	</defs>
-	<table class="sortable">
-		<thead>
-			<tr>
-				<th style="width: 1.5em;">&nbsp;</th>
-				<th style="width: 7em;">Time</th>
-				<th style="width: 1.5em; background-color: #a09f9f">
-					<select id="filter-log-level">
-						<option value="T" data-label="Trace">L</option>
-						<option value="D" data-label="Debug">L</option>
-						<option value="I" data-label="Info">L</option>
-						<option value="W" data-label="Warning">L</option>
-						<option value="E" data-label="Error">L</option>
-					</select>
-				</th>
-				<th style="width: 15em;">Group</th>
-				<th style="width: 20em;">Message</th>
-				<th>Attributes</th>
-			</tr>
-		</thead>
-		<tbody class="events"></tbody>
-	</table>
-	<div id="controls">
-		<span id="first-page-link" class="bare link" style="font-size:x-large;vertical-align:middle;">⏮</span>
-		<span id="prev-page-link" class="bare link">◀</span>
-		<span data-field="currentPageIndex"></span>
-		<span id="next-page-link" class="bare link">▶</span>
-		<span id="last-page-link" class="bare link" style="font-size:x-large;vertical-align:middle;">⏭</span>
-		<span><a id="reset-link" class="link">Reset filter</a></span>
-		<span id="filter-count">filtered: <span class="highlight" data-field="filteredEventCount"></span>,</span>
-		<span>total: <span class="highlight" data-field="totalEventCount"></span>,</span>
-
-		<span>retrieved: <span data-field="lastFetchTimestamp"></span>,</span>
-		<span>monitored: <span class="highlight" data-field="statsCount"></span>,</span>
-		<span>since: <span data-field="statsSince"></span>,</span>
-		<span>memory: <span class="highlight" data-field="statsMemoryPretty"></span>,</span>
-		<span><a href="https://github.com/emicklei/nanny" class="link">nanny</a>: <span
-				data-field="version"></span></span>
-
-	</div>
-	<div id="filters"></div>
-	<script>
-		const globals = {
-			pageSize: 40,
-			events: [],
-			lastFetchTimestamp: null,
-			totalEventCount: 0,
-			filterNames: [],	// Will be retrieved from DOM (fields with class "filter")
-			filterLabels: {},	// idem
-			filters: {},
-			filteredEventCount: 0,
-			currentPageIndex: 9999,		// Start at last page
-			maxPageIndex: 0,
-			attrValueLength: 80,
-			statsCount: 0,
-			statsSince: 0,
-			statsMemoryPretty: "",
-			version: "dev"
-		};
-		function formatAttrs(value) {
-			let sb = "";
-			for (const key in value) {
-				sb += key;
-				sb += "=";
-				let val = value[key];
-				if (typeof val === 'object') {
-					sb += "{";
-					for (const subkey in val) {
-						sb += subkey;
-						sb += ",";
-					}
-					if (sb.endsWith(',')) {
-						sb = sb.slice(0, sb.length - 1); // remove last comma
-					}
-					sb += "} ";
-				} else {
-					let sval = val.toString();
-					if (sval.length > globals.attrValueLength) {
-						sval = sval.slice(0, globals.attrValueLength) + " ...(" + sval.length.toString() + ")";
-					}
-					sb += sval;
-				}
-				sb += " ";
-			}
-			return sb.toString();
-		}
-
-		function twoDigitsString(num) {
-			return num < 10 ? "0" + num.toString() : num.toString();
-		}
-		function threeDigitsString(num) {
-			return num < 10 ? "00" + num.toString() : (num < 100 ? "0" + num.toString() : num.toString());
-		}
-
-		// Answer a local time from the specified date (which is either a date or a date string)
-		function formatLocalTimeFromDate(dateInput) {
-			const dateValue = new Date(dateInput);
-			if (Number.isNaN(dateValue.valueOf())) {
-				// Can't parse the date (assuming string input), just use the provided date string as result
-				return dateInput;
-			}
-
-			return `${twoDigitsString(dateValue.getHours())}:${twoDigitsString(dateValue.getMinutes())}:${twoDigitsString(dateValue.getSeconds())}.${threeDigitsString(dateValue.getMilliseconds())}`;
-		}
-
-		function formatLabel(levelString) {
-			if (levelString === "DEBUG-4") {
-				return 'T'; // nanny.Trace
-			}
-			return levelString.slice(0, 1);
-		}
-
-		const fieldFormatters = {
-			a: formatAttrs,
-			l: (value) => { return formatLabel(value); },
-			t: (value) => { return formatLocalTimeFromDate(value); },
-			currentPageIndex: (value) => { return `Events ${value * globals.pageSize + 1} to ${Math.min((value + 1) * globals.pageSize, globals.filteredEventCount)}`; },
-			lastFetchTimestamp: (value) => { return formatLocalTimeFromDate(value); },
-		};
-
-		// Load events from nanny
-		function loadData(callback) {
-			const url = new URL(window.location);
-			url.searchParams.set("do", "events");
-			fetch(url)
-				.then((response) => {
-					if (!response.ok) {
-						throw new Error("Failed to load event data");
-					}
-					globals.lastFetchTimestamp = new Date();
-					globals.statsCount = response.headers.get('x-nanny-stats-count')
-					let d = new Date(0); // The 0 there is the key, which sets the date to the epoch
-					d.setUTCSeconds(response.headers.get('x-nanny-stats-started-seconds'));
-					globals.statsSince = d.toLocaleString();
-					globals.statsMemoryPretty = humanFileSize(response.headers.get('x-nanny-stats-memory-bytes'));
-					globals.version = response.headers.get('x-nanny-version');
-					// conditionally set title
-					let title = response.headers.get('x-nanny-page-title');
-					if (title != "") document.title = title;
-					return response.json();
-				})
-				.then((data) => {
-					callback(data);
-				})
-				;
-		}
-
-		// Update table with new events
-		function updateData(data) {
-			globals.events = data;
-			globals.totalEventCount = data.length;
-
-			// Retrieve template rows
-			const summaryRow = document.querySelector("defs .summary");
-			const contentRow = document.querySelector("defs .content");
-
-			// Collect fields from the summary row
-			const fieldNames = [];
-			summaryRow.querySelectorAll("[data-field]").forEach((cell, index) => {
-				fieldNames[index] = cell.getAttribute("data-field");
-			});
-
-			// Create rows in the table for each event
-			const table = document.querySelector("tbody.events");
-			data.forEach((event) => {
-
-				// Create a new row and attach event to it as property
-				const newRow = summaryRow.cloneNode(true);	// Deep clone copy
-				newRow.__data = event;
-
-				// Add event severity level as class
-				newRow.classList.add("level-" + event.l.toLocaleLowerCase());
-
-				// Copy content into the row
-				const cells = newRow.children;
-				fieldNames.forEach((fieldName, index) => {
-					// First cell is toggler, so start at 1
-					cells[index + 1].textContent = formatField(event, fieldName);
-				});
-
-				// Append the row to the table
-				table.appendChild(newRow);
-
-				// Add content row, check if it has attributes (and enable toggler if so)
-				const newContentRow = contentRow.cloneNode(true);	// Deep clone copy
-				if (needsJSONContentRow(event)) {
-					// Add the JSON representation of the attributes to the content row
-					let doc = event.a;
-					for (const key in doc) {
-						let val = doc[key];
-						// try replace the value with a JSON structure
-						if (typeof val === 'string') {
-							try {
-								let revived = JSON.parse(val);
-								// replace with structure unless parse failed
-								doc[key] = revived;
-							} catch (e) {}							
-						}
-					}
-					newContentRow.lastElementChild.textContent = JSON.stringify(doc, null, "\t");
-				} else {
-					// Remove toggler and the visible triangle of toggler
-					cells[0].classList.remove("toggler");
-					cells[0].firstElementChild.remove();
-				}
-				table.appendChild(newContentRow);
-			});
-
-			// Update filters (which will update paging and controls)
-			updateFilters();
-		}
-
-		// returns whether to add a text content row with toggler
-		function needsJSONContentRow(event) {
-			let keycount = 0;
-			for (const key in event.a) {
-				let val = event.a[key];
-				if (val == null) {
-					continue;
-				}
-				if (typeof val === 'object') {
-					// if at least one non-empty object as attr value
-					if (Object.keys(val).length > 0) {
-						return true
-					}
-				}
-				// trimmed values require content row too
-				if (val.length > globals.attrValueLength) {
-					return true
-				}
-				keycount++;
-				if (keycount > 10) {
-					return true
-				}
-			}
-			return false;
-		}
-
-		// Update the controls
-		function updateControls() {
-			const fields = document.querySelectorAll("#controls [data-field]");
-			fields.forEach((field) => {
-				const fieldName = field.getAttribute("data-field");
-				field.textContent = formatField(globals, fieldName);
-			});
-		}
-
-		// Update the filters
-		function updateFilters() {
-
-			// Check row by row if the events match the current filter.
-			// Keep track of the count og events within the filter.
-			const summaryRows = document.querySelectorAll("tbody.events .summary");
-			globals.filteredEventCount = 0;
-			summaryRows.forEach((row) => {
-
-				// Mark matched rows (events) as being part of filter
-				const event = row.__data;
-				if (filterEvent(event)) {
-					row.classList.add("filtered");
-					globals.filteredEventCount++;
-					if ((globals.filteredEventCount % 2) === 1) {
-						row.classList.add("odd");
-					} else {
-						row.classList.remove("odd");
-					}
-				} else {
-					row.classList.remove("filtered");
-					row.classList.remove("visible");
-					row.classList.remove("odd");
-				}
-			});
-
-			// Mark if an actual filter is active (non empty)
-			const filterCountElement = document.getElementById("filter-count");
-			if (isFilterActive()) {
-				filterCountElement.classList.add("active");
-			} else {
-				filterCountElement.classList.remove("active");
-			}
-
-			// Show buttons to allow removal of individual filters
-			updateFilterRemovalButtons();
-
-			// Update the paging with the new filter
-			updatePaging();
-		}
-
-		function updateFilterRemovalButtons() {
-			const filtersInUse = Object.keys(globals.filters);
-			document.querySelectorAll("#filters .button").forEach((each) => {
-				const filterName = each.getAttribute("data-filter");
-				const index = filtersInUse.indexOf(filterName);
-				if (index >= 0) {
-					// Update filter value (just in case it changed)
-					each.querySelector(".label").textContent = globals.filters[filterName];
-
-					// Remove filter from in use list
-					filtersInUse.splice(index, 1);
-				} else {
-					// Filter is no longer in use, remove from page
-					each.remove();
-				}
-			});
-
-			// Add the missing filters
-			const filtersContainer = document.getElementById("filters");
-			filtersInUse.forEach((each) => {
-				// Create button
-				const button = document.querySelector("defs .button").cloneNode(true);	// Deep clone copy
-				button.querySelector(".label").textContent = globals.filterLabels[each];
-				button.querySelector(".value").textContent = globals.filters[each];
-				filtersContainer.appendChild(button);
-
-				// Add event handler to remove button
-				button.querySelector(".remove").addEventListener("click", () => {
-					clearFilterParam(each);
-				});
-			});
-		}
-
-		// Update paging
-		function updatePaging() {
-
-			// Update page index if it is no longer valid
-			globals.maxPageIndex = Math.floor(Math.max(globals.filteredEventCount - 1, 0) / globals.pageSize);
-			if (globals.currentPageIndex > globals.maxPageIndex) {
-				globals.currentPageIndex = globals.maxPageIndex;
-			}
-
-			// Mark filtered rows which are within page boundary as visible
-			const filteredRows = document.querySelectorAll("tbody.events .filtered");
-			const firstIndex = globals.currentPageIndex * globals.pageSize;
-			const lastIndex = firstIndex + globals.pageSize - 1;
-			filteredRows.forEach((row, index) => {
-				if (index >= firstIndex && index <= lastIndex) {
-					row.classList.add("visible");
-				} else {
-					row.classList.remove("visible");
-				}
-			});
-
-			// Update controls to show correct info
-			updateControls();
-		}
-
-		// Add event listeners
-		function addEventListeners() {
-
-			// Add click handler to filter cells to filter on their respective values.
-			globals.filterNames.forEach((filterName) => {
-				document.querySelectorAll(`tr.summary td.filter[data-field="${filterName}"]`).forEach((each) => {
-					each.addEventListener("click", (event) => {
-						setFilterParam(filterName, event.target.textContent);
-					});
-				});
-			});
-
-			// Add click handler to toggle showing the (JSON) value on separate row.
-			document.querySelectorAll("tr.summary td.toggler").forEach((each) => {
-				each.addEventListener("click", () => {
-					// Add class "with-content" to the summary row (i.e. parent of cell)
-					// to indicate the adjacent content row should be shown.
-					each.parentElement.classList.toggle("with-content");
-				});
-			});
-
-			// Add click handler to reset link
-			const resetLink = document.getElementById("reset-link");
-			resetLink.addEventListener("click", () => {
-				resetFilterParams();
-			});
-
-			// Add click handler to first page link
-			const firstPageLink = document.getElementById("first-page-link");
-			firstPageLink.addEventListener("click", () => {
-				gotoFirstPage();
-			});
-
-			// Add click handler to previous page link
-			const previousPageLink = document.getElementById("prev-page-link");
-			previousPageLink.addEventListener("click", () => {
-				switchPage(-1);
-			});
-
-			// Add click handler to next page link
-			const nextPageLink = document.getElementById("next-page-link");
-			nextPageLink.addEventListener("click", () => {
-				switchPage(+1);
-			});
-
-			// Add click handler to last page link
-			const lastPageLink = document.getElementById("last-page-link");
-			lastPageLink.addEventListener("click", () => {
-				gotoLastPage();
-			});
-
-			// Add click and change handler to filter log level
-			const filterLogLevelSelect = document.getElementById("filter-log-level");
-			filterLogLevelSelect.addEventListener("pointerdown", () => {
-				// When clicked replace dummy options with actual label
-				filterLogLevelSelect.querySelectorAll("option").forEach((each) => {
-					console.log("Replace content");
-					each.textContent = each.getAttribute("data-label");
-				});
-			});
-			filterLogLevelSelect.addEventListener("change", () => {
-				// When value chosen replace options with dummy value (which shows in table header)
-				filterLogLevelSelect.querySelectorAll("option").forEach((each) => {
-					console.log("Restore content");
-					each.textContent = "L";
-				});
-				setFilterParam("l", filterLogLevelSelect.value);
-			});
-		}
-
-		function initFilterNames() {
-			document.querySelectorAll("tr.summary td.filter[data-field]").forEach((each) => {
-				const name = each.getAttribute("data-field");
-				const label = each.getAttribute("data-label");
-				globals.filterNames.push(name);
-				globals.filterLabels[name] = label;
-			});
-		}
-
-		// Filter function
-		function filterEvent(event) {
-			// Answer if all filtered keys have the expected value in the event
-			return Object.keys(globals.filters).every((filterKey) => {
-				return formatField(event, filterKey) === globals.filters[filterKey];
-			});
-		}
-
-		// Set the specified filter parameter to the specified value
-		function setFilterParam(key, value) {
-			globals.filters[key] = value;
-			updateFilters();
-		}
-
-		// Clear specified filter parameter
-		function clearFilterParam(key) {
-			delete globals.filters[key];
-			updateFilters();
-		}
-
-		// Reset all filter parameters
-		function resetFilterParams() {
-			// Remove all known filter parameters
-			globals.filters = {};
-			updateFilters();
-		}
-
-		// Answer whether filter is active
-		function isFilterActive() {
-			return Object.keys(globals.filters).length > 0;
-		}
-
-		// Switch page
-		function switchPage(delta) {
-			globals.currentPageIndex += delta;
-			if (globals.currentPageIndex < 0) {
-				globals.currentPageIndex = 0;
-			} else if (globals.currentPageIndex > globals.maxPageIndex) {
-				globals.currentPageIndex = globals.maxPageIndex;
-			}
-			updatePaging();
-		}
-		function gotoFirstPage() {
-			globals.currentPageIndex = 0;
-			updatePaging();
-		}
-		function gotoLastPage() {
-			globals.currentPageIndex = globals.maxPageIndex;
-			updatePaging();
-		}
-
-		// Answer a formatted value based on the specified field name.
-		// Field formatters have a fixed name which is (currently) unique amongst different objects.
-		function formatField(obj, fieldName) {
-			const fieldFormatter = fieldFormatters[fieldName] || ((value) => { return value; });
-			return fieldFormatter(obj[fieldName]);
-		}
-
-		// All is setup, start loading data
-		loadData((data) => {
-
-			// Initialize filtering
-			initFilterNames();
-
-			// Update data once received
-			updateData(data);
-
-			// Add interaction to page
-			addEventListeners();
-		})
-
-
-		/**
-		 * Format bytes as human-readable text.
-		 * 
-		 * @param bytes Number of bytes.
-		 * @param si True to use metric (SI) units, aka powers of 1000. False to use 
-		 *           binary (IEC), aka powers of 1024.
-		 * @param dp Number of decimal places to display.
-		 * 
-		 * @return Formatted string.
-		 */
-		function humanFileSize(bytes, si = false, dp = 1) {
-			const thresh = si ? 1000 : 1024;
-
-			if (Math.abs(bytes) < thresh) {
-				return bytes + ' B';
-			}
-
-			const units = si
-				? ['kB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB']
-				: ['KiB', 'MiB', 'GiB', 'TiB', 'PiB', 'EiB', 'ZiB', 'YiB'];
-			let u = -1;
-			const r = 10 ** dp;
-
-			do {
-				bytes /= thresh;
-				++u;
-			} while (Math.round(Math.abs(bytes) * r) / r >= thresh && u < units.length - 1);
-
-
-			return bytes.toFixed(dp) + ' ' + units[u];
-		}
-	</script>
-</body>
-
+            tr.summary.filtered.visible:not(.with-content) + tr.content {
+                display: none;
+            }
+
+            tr.content td {
+                white-space: pre;
+                padding-bottom: 1em;
+                overflow-x: scroll;
+                text-overflow: unset;
+            }
+
+            td.toggler div {
+                width: 1em;
+                height: 1em;
+                cursor: pointer;
+                transform: rotate(0deg);
+                transition: transform 0.5s ease 0s;
+            }
+
+            tr.with-content td.toggler div {
+                transform: rotate(90deg) translate(0.2em, 0.1em);
+            }
+
+            tr.summary td {
+                white-space: nowrap;
+            }
+
+            td.group:not(:empty) {
+                cursor: pointer;
+            }
+
+            a.link,
+            td.link:hover,
+            span.link:hover {
+                color: #174ea6;
+                cursor: pointer;
+            }
+
+            a:not(.bare).link,
+            td:not(.bare).link:hover,
+            span:not(.bare).link:hover {
+                text-decoration: underline;
+            }
+
+            td,
+            th {
+                padding: 4px;
+                overflow: hidden;
+                white-space: nowrap;
+                text-overflow: ellipsis;
+            }
+
+            #controls .highlight,
+            #filter-count.active {
+                font-weight: bold;
+            }
+
+            #filters:empty {
+                display: none;
+            }
+
+            #filters::before {
+                content: "Applied filters: ";
+            }
+
+            #filters .button {
+                display: inline-block;
+                border: 1px solid #666;
+                border-radius: 4px;
+                padding: 4px 8px;
+                vertical-align: middle;
+            }
+
+            #filters .remove {
+                width: 1.6em;
+                padding: 0;
+                margin-left: 4px;
+                border: none;
+                font-weight: bold;
+                color: #000;
+                background-color: transparent;
+                vertical-align: middle;
+                cursor: pointer;
+            }
+
+            #filters .remove svg {
+                stroke: #174ea6;
+                stroke-width: 2px;
+            }
+
+            td[data-field="m"] {
+                color: #620245;
+            }
+        </style>
+    </head>
+
+    <body>
+        <defs>
+            <table>
+                <tbody>
+                    <tr class="summary">
+                        <td class="toggler">
+                            <div>
+                                <svg
+                                    xmlns="http://www.w3.org/2000/svg"
+                                    viewBox="0 0 24 24"
+                                >
+                                    <use href="#triangle"></use>
+                                </svg>
+                            </div>
+                        </td>
+                        <td data-field="t"></td>
+                        <td
+                            data-field="l"
+                            data-label="level"
+                            class="filter link"
+                        ></td>
+                        <td
+                            data-field="g"
+                            data-label="group"
+                            class="filter link"
+                        ></td>
+                        <td
+                            data-field="m"
+                            data-label="msg"
+                            class="filter link"
+                        ></td>
+                        <td data-field="a"></td>
+                    </tr>
+                    <tr class="content">
+                        <td></td>
+                        <td colspan="5"></td>
+                    </tr>
+                </tbody>
+            </table>
+            <span class="button">
+                <span class="label"></span>:
+                <span class="value"></span>
+                <button class="remove">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                        <use href="#cross"></use>
+                    </svg>
+                </button>
+            </span>
+            <svg>
+                <defs>
+                    <!-- All icons/symbols have 24x24 resolution -->
+                    <g id="triangle">
+                        <path d="M3,3L3,21L21,12"></path>
+                    </g>
+                    <g id="cross">
+                        <line x1="3" y1="3" x2="19" y2="19"></line>
+                        <line x1="19" y1="3" x2="3" y2="19"></line>
+                    </g>
+                </defs>
+            </svg>
+        </defs>
+        <table class="sortable">
+            <thead>
+                <tr>
+                    <th style="width: 1.5em">&nbsp;</th>
+                    <th style="width: 7em">Time</th>
+                    <th
+                        style="
+                            width: 1.5em;
+                            background-color: #a09f9f;
+                            position: relative;
+                        "
+                    >
+                        <span
+                            style="
+                                position: absolute;
+                                left: 3px;
+                                top: 50%;
+                                transform: translateY(-50%);
+                                pointer-events: none;
+                            "
+                            >&#x1F50D;</span
+                        >
+                        <select
+                            id="filter-log-level"
+                            style="
+                                width: 100%;
+                                text-indent: 15px;
+                                border: none;
+                                background: transparent;
+                            "
+                        >
+                            <option value="T" data-label="Trace">L</option>
+                            <option value="D" data-label="Debug">L</option>
+                            <option value="I" data-label="Info">L</option>
+                            <option value="W" data-label="Warning">L</option>
+                            <option value="E" data-label="Error">L</option>
+                        </select>
+                    </th>
+                    <th style="width: 15em">Group</th>
+                    <th style="width: 20em">Message</th>
+                    <th>Attributes</th>
+                </tr>
+            </thead>
+            <tbody class="events"></tbody>
+        </table>
+        <div id="controls">
+            <span
+                id="first-page-link"
+                class="bare link"
+                style="font-size: x-large; vertical-align: middle"
+                >⏮</span
+            >
+            <span id="prev-page-link" class="bare link">◀</span>
+            <span data-field="currentPageIndex"></span>
+            <span id="next-page-link" class="bare link">▶</span>
+            <span
+                id="last-page-link"
+                class="bare link"
+                style="font-size: x-large; vertical-align: middle"
+                >⏭</span
+            >
+            <span><a id="reset-link" class="link">Reset filter</a></span>
+            <span id="filter-count"
+                >filtered:
+                <span class="highlight" data-field="filteredEventCount"></span
+                >,</span
+            >
+            <span
+                >total:
+                <span class="highlight" data-field="totalEventCount"></span
+                >,</span
+            >
+
+            <span
+                >retrieved: <span data-field="lastFetchTimestamp"></span>,</span
+            >
+            <span
+                >monitored:
+                <span class="highlight" data-field="statsCount"></span>,</span
+            >
+            <span>since: <span data-field="statsSince"></span>,</span>
+            <span
+                >memory:
+                <span class="highlight" data-field="statsMemoryPretty"></span
+                >,</span
+            >
+            <span
+                ><a href="https://github.com/emicklei/nanny" class="link"
+                    >nanny</a
+                >: <span data-field="version"></span
+            ></span>
+        </div>
+        <div id="filters"></div>
+        <script>
+            const globals = {
+                pageSize: 40,
+                events: [],
+                lastFetchTimestamp: null,
+                totalEventCount: 0,
+                filterNames: [], // Will be retrieved from DOM (fields with class "filter")
+                filterLabels: {}, // idem
+                filters: {},
+                filteredEventCount: 0,
+                currentPageIndex: 9999, // Start at last page
+                maxPageIndex: 0,
+                attrValueLength: 80,
+                statsCount: 0,
+                statsSince: 0,
+                statsMemoryPretty: "",
+                version: "dev",
+            };
+            function formatAttrs(value) {
+                let sb = "";
+                for (const key in value) {
+                    sb += key;
+                    sb += "=";
+                    let val = value[key];
+                    if (typeof val === "object") {
+                        sb += "{";
+                        for (const subkey in val) {
+                            sb += subkey;
+                            sb += ",";
+                        }
+                        if (sb.endsWith(",")) {
+                            sb = sb.slice(0, sb.length - 1); // remove last comma
+                        }
+                        sb += "} ";
+                    } else {
+                        let sval = val.toString();
+                        if (sval.length > globals.attrValueLength) {
+                            sval =
+                                sval.slice(0, globals.attrValueLength) +
+                                " ...(" +
+                                sval.length.toString() +
+                                ")";
+                        }
+                        sb += sval;
+                    }
+                    sb += " ";
+                }
+                return sb.toString();
+            }
+
+            function twoDigitsString(num) {
+                return num < 10 ? "0" + num.toString() : num.toString();
+            }
+            function threeDigitsString(num) {
+                return num < 10
+                    ? "00" + num.toString()
+                    : num < 100
+                      ? "0" + num.toString()
+                      : num.toString();
+            }
+
+            // Answer a local time from the specified date (which is either a date or a date string)
+            function formatLocalTimeFromDate(dateInput) {
+                const dateValue = new Date(dateInput);
+                if (Number.isNaN(dateValue.valueOf())) {
+                    // Can't parse the date (assuming string input), just use the provided date string as result
+                    return dateInput;
+                }
+
+                return `${twoDigitsString(dateValue.getHours())}:${twoDigitsString(dateValue.getMinutes())}:${twoDigitsString(dateValue.getSeconds())}.${threeDigitsString(dateValue.getMilliseconds())}`;
+            }
+
+            function formatLabel(levelString) {
+                if (levelString === "DEBUG-4") {
+                    return "T"; // nanny.Trace
+                }
+                return levelString.slice(0, 1);
+            }
+
+            const fieldFormatters = {
+                a: formatAttrs,
+                l: (value) => {
+                    return formatLabel(value);
+                },
+                t: (value) => {
+                    return formatLocalTimeFromDate(value);
+                },
+                currentPageIndex: (value) => {
+                    return `Events ${value * globals.pageSize + 1} to ${Math.min((value + 1) * globals.pageSize, globals.filteredEventCount)}`;
+                },
+                lastFetchTimestamp: (value) => {
+                    return formatLocalTimeFromDate(value);
+                },
+            };
+
+            // Load events from nanny
+            function loadData(callback) {
+                const url = new URL(window.location);
+                url.searchParams.set("do", "events");
+                fetch(url)
+                    .then((response) => {
+                        if (!response.ok) {
+                            throw new Error("Failed to load event data");
+                        }
+                        globals.lastFetchTimestamp = new Date();
+                        globals.statsCount = response.headers.get(
+                            "x-nanny-stats-count",
+                        );
+                        let d = new Date(0); // The 0 there is the key, which sets the date to the epoch
+                        d.setUTCSeconds(
+                            response.headers.get(
+                                "x-nanny-stats-started-seconds",
+                            ),
+                        );
+                        globals.statsSince = d.toLocaleString();
+                        globals.statsMemoryPretty = humanFileSize(
+                            response.headers.get("x-nanny-stats-memory-bytes"),
+                        );
+                        globals.version =
+                            response.headers.get("x-nanny-version");
+                        // conditionally set title
+                        let title = response.headers.get("x-nanny-page-title");
+                        if (title != "") document.title = title;
+                        return response.json();
+                    })
+                    .then((data) => {
+                        callback(data);
+                    });
+            }
+
+            // Update table with new events
+            function updateData(data) {
+                globals.events = data;
+                globals.totalEventCount = data.length;
+
+                // Retrieve template rows
+                const summaryRow = document.querySelector("defs .summary");
+                const contentRow = document.querySelector("defs .content");
+
+                // Collect fields from the summary row
+                const fieldNames = [];
+                summaryRow
+                    .querySelectorAll("[data-field]")
+                    .forEach((cell, index) => {
+                        fieldNames[index] = cell.getAttribute("data-field");
+                    });
+
+                // Create rows in the table for each event
+                const table = document.querySelector("tbody.events");
+                data.forEach((event) => {
+                    // Create a new row and attach event to it as property
+                    const newRow = summaryRow.cloneNode(true); // Deep clone copy
+                    newRow.__data = event;
+
+                    // Add event severity level as class
+                    newRow.classList.add(
+                        "level-" + event.l.toLocaleLowerCase(),
+                    );
+
+                    // Copy content into the row
+                    const cells = newRow.children;
+                    fieldNames.forEach((fieldName, index) => {
+                        // First cell is toggler, so start at 1
+                        cells[index + 1].textContent = formatField(
+                            event,
+                            fieldName,
+                        );
+                    });
+
+                    // Append the row to the table
+                    table.appendChild(newRow);
+
+                    // Add content row, check if it has attributes (and enable toggler if so)
+                    const newContentRow = contentRow.cloneNode(true); // Deep clone copy
+                    if (needsJSONContentRow(event)) {
+                        // Add the JSON representation of the attributes to the content row
+                        let doc = event.a;
+                        for (const key in doc) {
+                            let val = doc[key];
+                            // try replace the value with a JSON structure
+                            if (typeof val === "string") {
+                                try {
+                                    let revived = JSON.parse(val);
+                                    // replace with structure unless parse failed
+                                    doc[key] = revived;
+                                } catch (e) {}
+                            }
+                        }
+                        newContentRow.lastElementChild.textContent =
+                            JSON.stringify(doc, null, "\t");
+                    } else {
+                        // Remove toggler and the visible triangle of toggler
+                        cells[0].classList.remove("toggler");
+                        cells[0].firstElementChild.remove();
+                    }
+                    table.appendChild(newContentRow);
+                });
+
+                // Update filters (which will update paging and controls)
+                updateFilters();
+            }
+
+            // returns whether to add a text content row with toggler
+            function needsJSONContentRow(event) {
+                let keycount = 0;
+                for (const key in event.a) {
+                    let val = event.a[key];
+                    if (val == null) {
+                        continue;
+                    }
+                    if (typeof val === "object") {
+                        // if at least one non-empty object as attr value
+                        if (Object.keys(val).length > 0) {
+                            return true;
+                        }
+                    }
+                    // trimmed values require content row too
+                    if (val.length > globals.attrValueLength) {
+                        return true;
+                    }
+                    keycount++;
+                    if (keycount > 10) {
+                        return true;
+                    }
+                }
+                return false;
+            }
+
+            // Update the controls
+            function updateControls() {
+                const fields = document.querySelectorAll(
+                    "#controls [data-field]",
+                );
+                fields.forEach((field) => {
+                    const fieldName = field.getAttribute("data-field");
+                    field.textContent = formatField(globals, fieldName);
+                });
+            }
+
+            // Update the filters
+            function updateFilters() {
+                // Check row by row if the events match the current filter.
+                // Keep track of the count og events within the filter.
+                const summaryRows = document.querySelectorAll(
+                    "tbody.events .summary",
+                );
+                globals.filteredEventCount = 0;
+                summaryRows.forEach((row) => {
+                    // Mark matched rows (events) as being part of filter
+                    const event = row.__data;
+                    if (filterEvent(event)) {
+                        row.classList.add("filtered");
+                        globals.filteredEventCount++;
+                        if (globals.filteredEventCount % 2 === 1) {
+                            row.classList.add("odd");
+                        } else {
+                            row.classList.remove("odd");
+                        }
+                    } else {
+                        row.classList.remove("filtered");
+                        row.classList.remove("visible");
+                        row.classList.remove("odd");
+                    }
+                });
+
+                // Mark if an actual filter is active (non empty)
+                const filterCountElement =
+                    document.getElementById("filter-count");
+                if (isFilterActive()) {
+                    filterCountElement.classList.add("active");
+                } else {
+                    filterCountElement.classList.remove("active");
+                }
+
+                // Show buttons to allow removal of individual filters
+                updateFilterRemovalButtons();
+
+                // Update the paging with the new filter
+                updatePaging();
+            }
+
+            function updateFilterRemovalButtons() {
+                const filtersInUse = Object.keys(globals.filters);
+                document
+                    .querySelectorAll("#filters .button")
+                    .forEach((each) => {
+                        const filterName = each.getAttribute("data-filter");
+                        const index = filtersInUse.indexOf(filterName);
+                        if (index >= 0) {
+                            // Update filter value (just in case it changed)
+                            each.querySelector(".label").textContent =
+                                globals.filters[filterName];
+
+                            // Remove filter from in use list
+                            filtersInUse.splice(index, 1);
+                        } else {
+                            // Filter is no longer in use, remove from page
+                            each.remove();
+                        }
+                    });
+
+                // Add the missing filters
+                const filtersContainer = document.getElementById("filters");
+                filtersInUse.forEach((each) => {
+                    // Create button
+                    const button = document
+                        .querySelector("defs .button")
+                        .cloneNode(true); // Deep clone copy
+                    button.querySelector(".label").textContent =
+                        globals.filterLabels[each];
+                    button.querySelector(".value").textContent =
+                        globals.filters[each];
+                    filtersContainer.appendChild(button);
+
+                    // Add event handler to remove button
+                    button
+                        .querySelector(".remove")
+                        .addEventListener("click", () => {
+                            clearFilterParam(each);
+                        });
+                });
+            }
+
+            // Update paging
+            function updatePaging() {
+                // Update page index if it is no longer valid
+                globals.maxPageIndex = Math.floor(
+                    Math.max(globals.filteredEventCount - 1, 0) /
+                        globals.pageSize,
+                );
+                if (globals.currentPageIndex > globals.maxPageIndex) {
+                    globals.currentPageIndex = globals.maxPageIndex;
+                }
+
+                // Mark filtered rows which are within page boundary as visible
+                const filteredRows = document.querySelectorAll(
+                    "tbody.events .filtered",
+                );
+                const firstIndex = globals.currentPageIndex * globals.pageSize;
+                const lastIndex = firstIndex + globals.pageSize - 1;
+                filteredRows.forEach((row, index) => {
+                    if (index >= firstIndex && index <= lastIndex) {
+                        row.classList.add("visible");
+                    } else {
+                        row.classList.remove("visible");
+                    }
+                });
+
+                // Update controls to show correct info
+                updateControls();
+            }
+
+            // Add event listeners
+            function addEventListeners() {
+                // Add click handler to filter cells to filter on their respective values.
+                globals.filterNames.forEach((filterName) => {
+                    document
+                        .querySelectorAll(
+                            `tr.summary td.filter[data-field="${filterName}"]`,
+                        )
+                        .forEach((each) => {
+                            each.addEventListener("click", (event) => {
+                                setFilterParam(
+                                    filterName,
+                                    event.target.textContent,
+                                );
+                            });
+                        });
+                });
+
+                // Add click handler to toggle showing the (JSON) value on separate row.
+                document
+                    .querySelectorAll("tr.summary td.toggler")
+                    .forEach((each) => {
+                        each.addEventListener("click", () => {
+                            // Add class "with-content" to the summary row (i.e. parent of cell)
+                            // to indicate the adjacent content row should be shown.
+                            each.parentElement.classList.toggle("with-content");
+                        });
+                    });
+
+                // Add click handler to reset link
+                const resetLink = document.getElementById("reset-link");
+                resetLink.addEventListener("click", () => {
+                    resetFilterParams();
+                });
+
+                // Add click handler to first page link
+                const firstPageLink =
+                    document.getElementById("first-page-link");
+                firstPageLink.addEventListener("click", () => {
+                    gotoFirstPage();
+                });
+
+                // Add click handler to previous page link
+                const previousPageLink =
+                    document.getElementById("prev-page-link");
+                previousPageLink.addEventListener("click", () => {
+                    switchPage(-1);
+                });
+
+                // Add click handler to next page link
+                const nextPageLink = document.getElementById("next-page-link");
+                nextPageLink.addEventListener("click", () => {
+                    switchPage(+1);
+                });
+
+                // Add click handler to last page link
+                const lastPageLink = document.getElementById("last-page-link");
+                lastPageLink.addEventListener("click", () => {
+                    gotoLastPage();
+                });
+
+                // Add click and change handler to filter log level
+                const filterLogLevelSelect =
+                    document.getElementById("filter-log-level");
+                filterLogLevelSelect.addEventListener("pointerdown", () => {
+                    // When clicked replace dummy options with actual label
+                    filterLogLevelSelect
+                        .querySelectorAll("option")
+                        .forEach((each) => {
+                            console.log("Replace content");
+                            each.textContent = each.getAttribute("data-label");
+                        });
+                });
+                filterLogLevelSelect.addEventListener("change", () => {
+                    // When value chosen replace options with dummy value (which shows in table header)
+                    filterLogLevelSelect
+                        .querySelectorAll("option")
+                        .forEach((each) => {
+                            console.log("Restore content");
+                            each.textContent = "L";
+                        });
+                    setFilterParam("l", filterLogLevelSelect.value);
+                });
+            }
+
+            function initFilterNames() {
+                document
+                    .querySelectorAll("tr.summary td.filter[data-field]")
+                    .forEach((each) => {
+                        const name = each.getAttribute("data-field");
+                        const label = each.getAttribute("data-label");
+                        globals.filterNames.push(name);
+                        globals.filterLabels[name] = label;
+                    });
+            }
+
+            // Filter function
+            function filterEvent(event) {
+                // Answer if all filtered keys have the expected value in the event
+                return Object.keys(globals.filters).every((filterKey) => {
+                    return (
+                        formatField(event, filterKey) ===
+                        globals.filters[filterKey]
+                    );
+                });
+            }
+
+            // Set the specified filter parameter to the specified value
+            function setFilterParam(key, value) {
+                globals.filters[key] = value;
+                updateFilters();
+            }
+
+            // Clear specified filter parameter
+            function clearFilterParam(key) {
+                delete globals.filters[key];
+                updateFilters();
+            }
+
+            // Reset all filter parameters
+            function resetFilterParams() {
+                // Remove all known filter parameters
+                globals.filters = {};
+                updateFilters();
+            }
+
+            // Answer whether filter is active
+            function isFilterActive() {
+                return Object.keys(globals.filters).length > 0;
+            }
+
+            // Switch page
+            function switchPage(delta) {
+                globals.currentPageIndex += delta;
+                if (globals.currentPageIndex < 0) {
+                    globals.currentPageIndex = 0;
+                } else if (globals.currentPageIndex > globals.maxPageIndex) {
+                    globals.currentPageIndex = globals.maxPageIndex;
+                }
+                updatePaging();
+            }
+            function gotoFirstPage() {
+                globals.currentPageIndex = 0;
+                updatePaging();
+            }
+            function gotoLastPage() {
+                globals.currentPageIndex = globals.maxPageIndex;
+                updatePaging();
+            }
+
+            // Answer a formatted value based on the specified field name.
+            // Field formatters have a fixed name which is (currently) unique amongst different objects.
+            function formatField(obj, fieldName) {
+                const fieldFormatter =
+                    fieldFormatters[fieldName] ||
+                    ((value) => {
+                        return value;
+                    });
+                return fieldFormatter(obj[fieldName]);
+            }
+
+            // All is setup, start loading data
+            loadData((data) => {
+                // Initialize filtering
+                initFilterNames();
+
+                // Update data once received
+                updateData(data);
+
+                // Add interaction to page
+                addEventListeners();
+            });
+
+            /**
+             * Format bytes as human-readable text.
+             *
+             * @param bytes Number of bytes.
+             * @param si True to use metric (SI) units, aka powers of 1000. False to use
+             *           binary (IEC), aka powers of 1024.
+             * @param dp Number of decimal places to display.
+             *
+             * @return Formatted string.
+             */
+            function humanFileSize(bytes, si = false, dp = 1) {
+                const thresh = si ? 1000 : 1024;
+
+                if (Math.abs(bytes) < thresh) {
+                    return bytes + " B";
+                }
+
+                const units = si
+                    ? ["kB", "MB", "GB", "TB", "PB", "EB", "ZB", "YB"]
+                    : ["KiB", "MiB", "GiB", "TiB", "PiB", "EiB", "ZiB", "YiB"];
+                let u = -1;
+                const r = 10 ** dp;
+
+                do {
+                    bytes /= thresh;
+                    ++u;
+                } while (
+                    Math.round(Math.abs(bytes) * r) / r >= thresh &&
+                    u < units.length - 1
+                );
+
+                return bytes.toFixed(dp) + " " + units[u];
+            }
+        </script>
+    </body>
 </html>
