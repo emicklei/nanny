@@ -284,15 +284,16 @@
 			<tr>
 				<th style="width: 1.5em;">&nbsp;</th>
 				<th style="width: 7em;">Time</th>
-				<th style="width: 1.5em; background-color: #a09f9f">
-					<select id="filter-log-level">
-						<option value="T" data-label="Trace">L</option>
-						<option value="D" data-label="Debug">L</option>
-						<option value="I" data-label="Info">L</option>
-						<option value="W" data-label="Warning">L</option>
-						<option value="E" data-label="Error">L</option>
-					</select>
-				</th>
+				<th style="width: 1.5em; background-color: #a09f9f; position: relative;">
+                    <span style="position: absolute; left: 3px; top: 50%; transform: translateY(-50%); pointer-events: none;">&#x1F50D;</span>
+                    <select id="filter-log-level" style="width: 100%; text-indent: 15px; border: none; background: transparent;">
+                        <option value="T" data-label="Trace">L</option>
+                        <option value="D" data-label="Debug">L</option>
+                        <option value="I" data-label="Info">L</option>
+                        <option value="W" data-label="Warning">L</option>
+                        <option value="E" data-label="Error">L</option>
+                    </select>
+                </th>
 				<th style="width: 15em;">Group</th>
 				<th style="width: 20em;">Message</th>
 				<th>Attributes</th>
