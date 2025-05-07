@@ -315,9 +315,11 @@
 		<span>monitored: <span class="highlight" data-field="statsCount"></span>,</span>
 		<span>since: <span data-field="statsSince"></span>,</span>
 		<span>memory: <span class="highlight" data-field="statsMemoryPretty"></span>,</span>
-		<span><a href="https://github.com/emicklei/nanny" class="link">nanny</a>: <span
-				data-field="version"></span></span>
-
+		<span>
+			<a href="https://github.com/emicklei/nanny" class="link">nanny</a>: <span data-field="version"></span>
+		</span>
+		<span>&nbsp;&nbsp;::&nbsp;&nbsp;</span>
+		<span class="highlight" data-field="title"></span>
 	</div>
 	<div id="filters"></div>
 	<script>
@@ -336,7 +338,8 @@
 			statsCount: 0,
 			statsSince: 0,
 			statsMemoryPretty: "",
-			version: "dev"
+			version: "dev",
+			title:""
 		};
 		function formatAttrs(value) {
 			let sb = "";
@@ -417,7 +420,10 @@
 					globals.version = response.headers.get('x-nanny-version');
 					// conditionally set title
 					let title = response.headers.get('x-nanny-page-title');
-					if (title != "") document.title = title;
+					if (title != "") {
+						document.title = title;
+						globals.title = title;
+					}
 					return response.json();
 				})
 				.then((data) => {
