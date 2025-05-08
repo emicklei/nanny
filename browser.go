@@ -48,7 +48,6 @@ func (b *Browser) serveEvents(w http.ResponseWriter, _ *http.Request) {
 	w.Header().Set("x-nanny-stats-started-seconds", fmt.Sprintf("%d", b.recorder.stats.Started.Unix()))
 	w.Header().Set("x-nanny-stats-memory-bytes", fmt.Sprintf("%d", b.recorder.computeEventsMemory()))
 	w.Header().Set("Content-Type", "application/json")
-	w.Header().Set("x-nanny-version", Version)
 	w.Header().Set("x-nanny-page-size", fmt.Sprintf("%d", b.options.PageSize))
 	w.Header().Set("x-nanny-page-title", b.options.PageTitle)
 	enc := json.NewEncoder(w)
