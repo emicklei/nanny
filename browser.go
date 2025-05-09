@@ -12,8 +12,11 @@ type Browser struct {
 }
 
 type BrowserOptions struct {
-	PageSize  int
-	PageTitle string
+	PageSize             int
+	PageTitle            string
+	EndHTMLHeadFunc      func() string // must return HTML head content
+	BeforeHTMLTableFunc  func() string // must return HTML body content
+	AfterHTMLFiltersFunc func() string // must return HTML body content
 }
 
 func NewBrowser(rec *recorder, opts ...BrowserOptions) *Browser {

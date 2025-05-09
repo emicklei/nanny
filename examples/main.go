@@ -47,7 +47,20 @@ func main() {
 	http.HandleFunc("/hidden", hidden)
 
 	// serve captured events
-	http.Handle("/nanny", nanny.NewBrowser(rec, nanny.BrowserOptions{PageSize: 10, PageTitle: "Demo Nanny"}))
+	options := nanny.BrowserOptions{
+		PageSize:  10,
+		PageTitle: "Demo Nanny",
+		EndHTMLHeadFunc: func() string {
+			return `<!-- end of head -->`
+		},
+		BeforeHTMLTableFunc: func() string {
+			return `<h4>BeforeHTMLTableFunc</h4>`
+		},
+		AfterHTMLFiltersFunc: func() string {
+			return `<h4>AfterHTMLFiltersFunc</h4>`
+		},
+	}
+	http.Handle("/nanny", nanny.NewBrowser(rec, options))
 
 	slog.Info("generating events...", "N", *N)
 

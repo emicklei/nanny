@@ -106,4 +106,4 @@ So if the fallback handler is configured for INFO only then the TRACE and DEBUG 
 
 Current implementation does not work when accessing an HTTP load-balanced setup with > 1 instances. This is because the HTML page and event data is fetched in separate HTTP requests; page can be served by instance 1, data could be served by instance 2.
 
-(c) 2024, https://ernestmicklei.com. https://www.stel-it.nl. MIT License.
+(c) 2025, https://ernestmicklei.com. https://www.stel-it.nl. MIT License.

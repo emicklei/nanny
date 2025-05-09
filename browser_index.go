@@ -5,30 +5,15 @@ import (
 	"io"
 	"net/http"
 	"os"
-	"time"
+	"strings"
 
 	_ "embed"
 )
 
 const indexHTMLContentType = "text/html; charset=utf-8"
 
-type templateData struct {
-	Events         []Event
-	EventsSeen     int64
-	Since          time.Time
-	OffsetPrevious int
-	OffsetNext     int
-}
-
-type eventFilter struct {
-	level  string
-	group  string
-	offset int
-	count  int
-}
-
 //go:embed index.html
-var contentHTML []byte
+var contentHTML string
 
 func (b *Browser) serveStaticIndex(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", indexHTMLContentType)
@@ -41,7 +26,20 @@ func (b *Browser) serveStaticIndex(w http.ResponseWriter, r *http.Request) {
 			io.WriteString(w, err.Error())
 			return
 		}
-		contentHTML = content
+		contentHTML = string(content)
 	}
-	w.Write(contentHTML)
+	// apply HTML insertions if any
+	if b.options.EndHTMLHeadFunc != nil {
+		endHTML := b.options.EndHTMLHeadFunc()
+		contentHTML = strings.Replace(contentHTML, "<!--EndHTMLHeadFunc-->", endHTML, 1)
+	}
+	if b.options.BeforeHTMLTableFunc != nil {
+		beforeHTML := b.options.BeforeHTMLTableFunc()
+		contentHTML = strings.Replace(contentHTML, "<!--BeforeHTMLTableFunc-->", beforeHTML, 1)
+	}
+	if b.options.AfterHTMLFiltersFunc != nil {
+		afterHTML := b.options.AfterHTMLFiltersFunc()
+		contentHTML = strings.Replace(contentHTML, "<!--AfterHTMLFiltersFunc-->", afterHTML, 1)
+	}
+	io.WriteString(w, contentHTML)
 }
