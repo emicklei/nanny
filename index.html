@@ -304,11 +304,11 @@
 		<tbody class="events"></tbody>
 	</table>
 	<div id="controls">
-		<span id="first-page-link" class="bare link" style="font-size:x-large;vertical-align:middle;">⏮</span>
-		<span id="prev-page-link" class="bare link">◀</span>
+		<span id="first-page-link" class="bare link" style="font-size:x-large;vertical-align:middle;" title="show first">⏮</span>
+		<span id="prev-page-link" class="bare link" title="show previous">◀</span>
 		<span data-field="currentPageIndex"></span>
-		<span id="next-page-link" class="bare link">▶</span>
-		<span id="last-page-link" class="bare link" style="font-size:x-large;vertical-align:middle;">⏭</span>
+		<span id="next-page-link" class="bare link" title="show next">▶</span>
+		<span id="last-page-link" class="bare link" style="font-size:x-large;vertical-align:middle;" title="show last">⏭</span>
 		<span><a id="reset-link" class="link">Reset filter</a></span>
 		<span id="filter-count">filtered: <span class="highlight" data-field="filteredEventCount"></span>,</span>
 		<span>total: <span class="highlight" data-field="totalEventCount"></span>,</span>
@@ -318,7 +318,7 @@
 		<span>since: <span data-field="statsSince"></span>,</span>
 		<span>memory: <span class="highlight" data-field="statsMemoryPretty"></span></span>
 		<span>&nbsp;::&nbsp;</span>
-		<span class="highlight" data-field="title"></span>
+		<span data-field="title"></span>
 	</div>
 	<div id="filters"></div>
 	<!--AfterHTMLFiltersFunc-->
